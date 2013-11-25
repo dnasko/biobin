@@ -1,0 +1,10 @@
+##################
+## Notes on C++ ##
+##################
+
+## Compiling libraries
+
+$ g++ -c UnsortedList.cc
+$ g++ main.cc -o "UnsortedList" -L. UnsortedList.o
+$ ./UnsortedList
+
