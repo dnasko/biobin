@@ -1,5 +1,5 @@
-Bioinformatic Software and Code Repository
-==========================================
+DNAsko Software Repo
+====================
 
-Central repository for bioinformatic software and code
-------------------------------------------------------
+### Central repository for bioinformatic software and code
+
