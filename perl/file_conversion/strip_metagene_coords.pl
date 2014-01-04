@@ -91,8 +91,14 @@ pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
 pod2usage( -msg  => "\n\n ERROR!  Required argument -infile not found.\n\n", -exitval => 2, -verbose => 1)  if (! $infile );
 
+if ($infile =~ m/\.gz$/) { ## if a gzip compressed infile 
+    open(IN,"gunzip -c $infile |") || die "\n\n Cannot open the input file: $infile\n\n";
+}
+else {
+    open(IN,"<$infile") || die "\n\n Cannot open the input file: $infile\n\n";
+}
+
 if (! $outfile) {
-    open(IN,"<$infile") || die "\n\n Cannot open input file $infile\n\n";
     while(<IN>) {
 	chomp;
 	if ($_ =~ m/^>/) {
@@ -106,7 +112,6 @@ if (! $outfile) {
     close(IN);
 }
 else {
-    open(IN,"<$infile") || die "\n\n Cannot open input file $infile\n\n";
     open(OUT,">$outfile") || die "\n\n Cannot open the output file $outfile\n\n";
     while(<IN>) {
 	chomp;
