@@ -1,21 +1,22 @@
 #!/usr/bin/perl -w
 
-# MANUAL FOR skeleton.pl
+# MANUAL FOR strip_metagene_coords.pl
 
 =pod
 
 =head1 NAME
 
-skeleton.pl -- short descrip
+strip_metagene_coords.pl -- strips the coordinates from a MetaGene FASTA file
 
 =head1 SYNOPSIS
 
- skeleton.pl -in /Path/to/infile.fasta -out /Path/to/output.txt
+ strip_metagene_coords.pl -in /Path/to/infile.fasta -out /Path/to/output.fasta
                      [--help] [--manual]
 
 =head1 DESCRIPTION
 
- This is a skeleton Perl script, meant only to aid you as a template.
+ Strips the last three coordinates from the MetaGene FASTA files, such as:
+ >CFX_164FHGSA7938_89_567_1 the _89_567_1 bit will be stripped.
  
 =head1 OPTIONS
 
@@ -23,11 +24,11 @@ skeleton.pl -- short descrip
 
 =item B<-i, --in>=FILENAME
 
-Input file in XXX format. (Required) 
+Input file in FASTA format. (Required) 
 
 =item B<-o, --out>=FILENAME
 
-Output file in YYY format. (Required) 
+Output file in FASTA format. Default to STDOUT (Optional)
 
 =item B<-h, --help>
 
@@ -71,6 +72,10 @@ use strict;
 use Getopt::Long;
 use File::Basename;
 use Pod::Usage;
+use FindBin;
+use Cwd 'abs_path';
+use lib abs_path("$FindBin::Bin/../..");
+use DNAsko::MetaGene;
 
 #ARGUMENTS WITH NO DEFAULT
 my($infile,$outfile,$help,$manual);
@@ -85,13 +90,36 @@ GetOptions (
 pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
 pod2usage( -msg  => "\n\n ERROR!  Required argument -infile not found.\n\n", -exitval => 2, -verbose => 1)  if (! $infile );
-pod2usage( -msg  => "\n\n ERROR!  Required argument -outfile not found.\n\n", -exitval => 2, -verbose => 1)  if (! $outfile);
 
-
-
-
-
-
-
+if (! $outfile) {
+    open(IN,"<$infile") || die "\n\n Cannot open input file $infile\n\n";
+    while(<IN>) {
+	chomp;
+	if ($_ =~ m/^>/) {
+	    my $header = MetaGene::strip_coords($_);
+	    print "$header\n";
+	}
+	else {
+	    print "$_\n";
+	}
+    }
+    close(IN);
+}
+else {
+    open(IN,"<$infile") || die "\n\n Cannot open input file $infile\n\n";
+    open(OUT,">$outfile") || die "\n\n Cannot open the output file $outfile\n\n";
+    while(<IN>) {
+	chomp;
+	if ($_ =~ m/^>/) {
+	    my $header = MetaGene::strip_coords($_);
+	    print OUT "$header\n";
+	}
+	else {
+	    print OUT "$_\n";
+	}
+    }
+    close(OUT);
+    close(IN);
+}
 
 exit 0;
