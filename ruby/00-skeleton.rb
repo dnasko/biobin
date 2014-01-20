@@ -2,45 +2,50 @@
 require 'getoptlong'
 
 opts = GetoptLong.new(
-  [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
-  [ '--repeat', '-n', GetoptLong::REQUIRED_ARGUMENT ],
-  [ '--name', GetoptLong::OPTIONAL_ARGUMENT ]
+                      ['--in', '-i', GetoptLong::REQUIRED_ARGUMENT],
+                      ['--out', '-o', GetoptLong::REQUIRED_ARGUMENT],
+                      [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
 )
 
-dir = nil
-name = nil
-repetitions = 1
+infile = nil
+out = nil
 opts.each do |opt, arg|
   case opt
     when '--help'
       puts <<-EOF
-hello [OPTION] ... DIR
+Usage:
+     skeleton.rb -in /Path/to/infile.fasta -out /Path/to/output.txt
+                         [-help]
 
--h, --help:
-   show help
+Options:
+    -i, --in=FILENAME
+       Input file in XXX format. (Required)
 
---repeat x, -n x:
-   repeat x times
+    -o, --out=FILENAME
+       Output file in YYY format. (Required)
+    
+    -h, --help
+       Displays the usage message. (Optional)
 
---name [name]:
-   greet user by name, if name not supplied default is John
-
-DIR: The directory in which to issue the greeting.
       EOF
-    when '--repeat'
-      repetitions = arg.to_i
-    when '--name'
-      if arg == ''
-        name = 'John'
-      else
-        name = arg
-      end
+    exit 0
+    when '--in'
+      infile = arg.to_s
+    when '--out'
+      out = arg.to_s
   end
 end
 
-if ARGV.length != 1
-  puts "Missing dir argument (try --help)"
+if infile.nil?
+  puts "\n\n ERROR! Required argument -in not found (try --help)\n\n"
   exit 0
 end
+if out.nil?
+  puts "\n\n ERROR! Required argument -out not found (try --help)\n\n"
+  exit 0
+end
+
+puts "Infile = " + infile
+puts out
 
 exit 0;
