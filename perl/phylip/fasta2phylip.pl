@@ -1,21 +1,21 @@
 #!/usr/bin/perl -w
 
-# MANUAL FOR skeleton.pl
+# MANUAL FOR fasta2phylip.pl
 
 =pod
 
 =head1 NAME
 
-skeleton.pl -- short descrip
+fasta2phylip.pl -- convert sequence alignment in FASTA format to PHYLIP format
 
 =head1 SYNOPSIS
 
- skeleton.pl -in /Path/to/infile.fasta -out /Path/to/output.txt
+ fasta2phylip.pl -in /Path/to/infile.fasta -out /Path/to/output.phy
                      [--help] [--manual]
 
 =head1 DESCRIPTION
 
- This is a skeleton Perl script, meant only to aid you as a template.
+ Converts FASTA MSA to PHYLIP MSA (sequential format).
  
 =head1 OPTIONS
 
@@ -23,11 +23,11 @@ skeleton.pl -- short descrip
 
 =item B<-i, --in>=FILENAME
 
-Input file in XXX format. (Required) 
+Input file in FASTA format. (Required) 
 
 =item B<-o, --out>=FILENAME
 
-Output file in YYY format. (Required) 
+Output file in PHYLIP format. (Required) 
 
 =item B<-h, --help>
 
@@ -94,10 +94,54 @@ else { ## If not gzip comgressed
     open(IN,"<$infile") || die "\n\n Cannot open the input file: $infile\n\n";
 }
 
+## First run through for sequence count and length determination.
+my $total_seqs = 0;
+my $length = 0;
 while(<IN>) {
     chomp;
-
+    if ($_ =~ m/^>/) {
+	$total_seqs++;
+    }
+    else {
+	$length = length($_);
+    }
 }
 close(IN);
+## Second run through
+my $counter = 0;
+
+open(OUT,">$outfile") || die "\n\n Cannot write to outfile: $outfile\n\n";
+if ($infile =~ m/\.gz$/) { ## if a gzip compressed infile
+    open(IN,"gunzip -c $infile |") || die "\n\n Cannot open the input file: $infile\n\n";
+}
+else { ## If not gzip comgressed
+    open(IN,"<$infile") || die "\n\n Cannot open the input file: $infile\n\n";
+}
+print OUT "$total_seqs\t$length\n";
+while(<IN>) {
+    chomp;
+    if ($_ =~ m/^>/) {
+	my $header = $_;
+	$header =~ s/^>//;
+	$header =~ s/-/_/g;
+	$header =~ s/\.//g;
+	if (length($header) > 10) {
+	    print STDERR "$header -> this header exceeds 10 characters. New (smaller) name: ";
+	    $header = <STDIN>;
+	    chomp($header);
+	}
+	print OUT "$header";
+	my $make_up = 12 - length($header);
+	for(my $i = 0; $i < $make_up; $i++) {
+	    print OUT " ";
+	}
+	$counter++;
+    }
+    else {
+	print OUT "$_\n";
+    }
+}
+close(IN);
+close(OUT);
 
 exit 0;
