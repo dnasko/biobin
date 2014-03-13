@@ -10,7 +10,7 @@ find_adapt_batches.pl -- find sequences that have certain adapter / barcode / pr
 
 =head1 SYNOPSIS
 
- find_adapt_batches.pl --adapters=/Path/to/adapters.lookup --fasta=/path/to/file.fasta --window=30 --identity=100 --outfile=/path/to/outfile.fasta
+ find_adapt_batches.pl --adapters=/Path/to/adapters.lookup --fasta=/path/to/file.fasta --window=30 --identity=100 --outdir=/path/to/outfile.fasta
                      [--help] [--manual]
 
 =head1 DESCRIPTION
@@ -32,7 +32,7 @@ Input file in FASTA format. (Required)
 
 =item B<-a, --adapter>=FILENAME
 
-The adapters your searching for. (Required)
+The adapters your searching for. Tab and line delimmited (Required)
 
 =item B<-w, --window>=INTEGER
 
