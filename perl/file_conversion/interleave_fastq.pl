@@ -145,7 +145,7 @@ while(<IN>) {
 	print OUT "$_\n";
     }
     elsif ($l == 1) {
-	print OUT "$_\n";
+	print OUT "$_\n+\n";
     }
     elsif ($l == 3) {
 	$l = -1;
