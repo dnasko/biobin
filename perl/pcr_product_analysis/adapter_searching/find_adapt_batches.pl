@@ -151,13 +151,27 @@ for (my $i=0; $i < scalar(@Adapt); $i++) {
 		    my $revcom = scalar reverse $forward;
 		    $revcom =~ tr/ATGCatgc/TACGtacg/;
 		    my $top_forw = substr $forward, 0, $window;
+		    $window *= -1;
+		    my $tail_forw = substr $forward, $window;
+		    $window *= -1;
 		    my $top_rev = substr $revcom, 0, $window;
+		    $window *= -1;
+		    my $tail_rev = substr $revcom, $window;
+		    $window *= -1;
 		    if (amatch ($adapter,[ $identity_string ], $top_forw)) {
+			print OUT "$header\n$forward\n";
+			$forw++;
+		    }
+		    elsif (amatch ($adapter,[ $identity_string ], $tail_forw)) {
 			print OUT "$header\n$forward\n";
 			$forw++;
 		    }
 		    elsif (amatch ($adapter,[ $identity_string ], $top_rev)) {
 			print OUT "$header\n$revcom\n";           ## So if you match the primer on the reverse compliment,  print out the sequence in that orientation.
+			$rev++;
+		    }
+		    elsif (amatch ($adapter,[ $identity_string ], $tail_rev)) {
+			print OUT "$header\n$revcom\n";
 			$rev++;
 		    }
 		    else {
@@ -200,15 +214,29 @@ for (my $i=0; $i < scalar(@Adapt); $i++) {
                     my $revcom = scalar reverse $forward;
                     $revcom =~ tr/ATGCatgc/TACGtacg/;
                     my $top_forw = substr $forward, 0, $window;
-                    my $top_rev = substr $revcom, 0, $window;
+		    $window *= -1;
+		    my $tail_forw = substr $forward, $window;
+		    $window *= -1;
+		    my $top_rev = substr $revcom, 0, $window;
+		    $window *= -1;
+		    my $tail_rev = substr $revcom, $window;
+		    $window *= -1;
                     if (amatch ($adapter,[ $identity_string ], $top_forw)) {
                         print OUT "$header\n$forward\n";
                         $forw++;
                     }
-                    elsif (amatch ($adapter,[ $identity_string ], $top_rev)) {
-                        print OUT "$header\n$revcom\n";           ## So if you match the primer on the reverse compliment,  print out the sequence in that orientation.                                                                                                         
-                        $rev++;
+		    elsif (amatch ($adapter,[ $identity_string ], $tail_forw)) {
+			print OUT "$header\n$forward\n";
+			$forw++;
+		    }
+		    elsif (amatch ($adapter,[ $identity_string ], $top_rev)) {
+                        print OUT "$header\n$revcom\n";           ## So if you match the primer on the reverse compliment,  print out the sequence in that orientation.
+			$rev++;
                     }
+		    elsif (amatch ($adapter,[ $identity_string ], $tail_rev)) {
+			print OUT "$header\n$revcom\n";
+			$rev++;
+		    }
                     else {
                         print OUTN "$header\n$forward\n";
                     }
