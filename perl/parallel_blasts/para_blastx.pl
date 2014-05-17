@@ -1,16 +1,16 @@
 #!/usr/bin/perl -w
 
-# MANUAL FOR para_blastp.pl
+# MANUAL FOR para_blastx.pl
 
 =pod
 
 =head1 NAME
 
-para_blastp.pl -- embarasingly parallel tBLASTx
+para_blastx.pl -- embarasingly parallel BLASTx
 
 =head1 SYNOPSIS
 
- para_blastp.pl -query /path/to/infile.fasta -db /path/to/db -out /path/to/output.btab -evalue 1e-3 -outfmt 6 -threads 1
+ para_blastx.pl -query /path/to/infile.fasta -db /path/to/db -out /path/to/output.btab -evalue 1e-3 -outfmt 6 -threads 1
                      [--help] [--manual]
 
 =head1 DESCRIPTION
@@ -111,7 +111,7 @@ GetOptions (
 pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
 pod2usage( -msg  => "\n\n ERROR!  Required arguments --query not found.\n\n", -exitval => 2, -verbose => 1)  if (! $query );
-my $program = "blastp";
+my $program = "blastx";
 my @chars = ("A".."Z", "a".."z");
 my $rand_string;
 $rand_string .= $chars[rand @chars] for 1..8;

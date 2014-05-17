@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-para_blastp.pl -- embarasingly parallel tBLASTx
+para_ublast.pl -- embarasingly parallel UBLAST
 
 =head1 SYNOPSIS
 
- para_blastp.pl -query /path/to/infile.fasta -db /path/to/db -out /path/to/output.btab -evalue 1e-3 -outfmt 6 -threads 1
+ para_ublast.pl -query /path/to/infile.fasta -db /path/to/db -out /path/to/output.btab -evalue 1e-3 -threads 1
                      [--help] [--manual]
 
 =head1 DESCRIPTION
@@ -34,10 +34,6 @@ Path to output btab file. (Required)
 =item B<-e, --evalue>=INT
 
 E-value. (Default = 10)
-
-=item B<-f, --outfmt>=INT
-
-Output format. (Default = 6)
 
 =item B<-t, --threads>=INT
 
@@ -94,7 +90,6 @@ my $script_working_dir = $FindBin::Bin;
 my($query,$db,$out,$help,$manual);
 my $threads = 1;
 my $evalue = 10;
-my $outfmt = 6;
 my @THREADS;
 
 GetOptions (	
@@ -102,7 +97,6 @@ GetOptions (
                                 "d|db=s"        =>      \$db,
                                 "o|out=s"       =>      \$out,
                                 "e|evalue=s"    =>      \$evalue,
-                                "f|outfmt=s"    =>      \$outfmt,
                                 "t|threads=i"   =>      \$threads,
              			"h|help"	=>	\$help,
 				"m|manual"	=>	\$manual);
@@ -111,14 +105,14 @@ GetOptions (
 pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
 pod2usage( -msg  => "\n\n ERROR!  Required arguments --query not found.\n\n", -exitval => 2, -verbose => 1)  if (! $query );
-my $program = "blastp";
+my $program = "usearch6";
 my @chars = ("A".."Z", "a".."z");
 my $rand_string;
 $rand_string .= $chars[rand @chars] for 1..8;
 my $tmp_file = "./$program" . "_tmp_" . $rand_string;
 
 ## Check that blastn and makeblastdb are installed on this machine
-my $PROG = `which $program`; unless ($PROG =~ m/$program/) { die "\n\n ERROR: External dependency '$program' not installed in system PATH\n\n (ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/)\n\n";}
+my $PROG = `which $program`; unless ($PROG =~ m/$program/) { die "\n\n ERROR: External dependency '$program' not installed in system PATH\n\n";}
 my $date = `date`;
 print STDERR " Using $threads threads\n";
 print STDERR " Using this BLAST: $PROG Beginning: $date\n";
@@ -129,7 +123,7 @@ chomp($seqs);
 
 ## Create the working directory, then make blastdb and execute blastn
 if ($threads == 1) {
-    print `$program -query $query -db $db -out $out -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 50`;
+    print `$program -ublast $query -db $db -alnout $out -evalue $evalue`;
 }
 else {
     print `mkdir -p $tmp_file`;
@@ -142,7 +136,7 @@ else {
     print `perl $script_working_dir/bin/splitFASTA.pl $query $tmp_file split $seqs_per_file`;
     print `mkdir -p $tmp_file/btab_splits`;
     for (my $i=1; $i<=$threads; $i++) {
-	my $blast_exe = "$program -query $tmp_file/split-$i.fsa -db $db -out $tmp_file/btab_splits/split.$i.btab -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 500";
+	my $blast_exe = "$program -ublast $tmp_file/split-$i.fsa -db $db -alnout $tmp_file/btab_splits/split.$i.btab -evalue $evalue";
 	push (@THREADS, threads->create('task',"$blast_exe"));
     }
     foreach my $thread (@THREADS) {
