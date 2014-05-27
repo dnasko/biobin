@@ -193,6 +193,8 @@ foreach my $q (@Query) {
 	
 	my $j = $max_j;
 	my $i = $max_i;
+	my $send = $i;
+	my $qend = $j;
 	
 	while (1) {
 	    last if $matrix[$i][$j]{pointer} eq "none";
@@ -213,25 +215,50 @@ foreach my $q (@Query) {
 		$i--;
 	    }  
 	}
-	
+	my $sstart = $i + 1;
+        my $qstart = $j + 1;
 	$align1 = reverse $align1;
 	$align2 = reverse $align2;
 	my $aln_string;
 	my @One = split(//, $align1);
 	my @Two = split(//, $align2);
+	my $match = 0;
 	for(my $i=0;$i<length($align1);$i++) {
 	    if ($One[$i] eq $Two[$i]) {
 		$aln_string = $aln_string . "|";
+		$match++;
 	    }
 	    else {
 		$aln_string = $aln_string . " ";
 	    }
 	}
+	my $percent_identity = $match / length($align1);
+	$percent_identity *= 100;
+	$percent_identity = Round($percent_identity, 2);
+	my $mismatch = $aln_string =~ tr/ / /;
+	my $gaps = $align1 =~ tr/-/-/;
+	$gaps   += $align2 =~ tr/-/-/;
+	$mismatch -= $gaps;
+	## Printing to tabular output
+	print BTAB $q . "\t" .
+	    $s . "\t" . 
+	    $percent_identity . "\t" . 
+	    length($align1) . "\t" . 
+	    $mismatch . "\t" . 
+	    $gaps . "\t" .
+	    $qstart . "\t" . 
+	    $qend . "\t" . 
+	    $sstart . "\t" .
+	    $send . "\t" .
+	    $max_score . "\n";
+	
+	## Printing to the raw outpuit
 	unless (length($align1) > 80) {
 	    print RAW "Query:   $align1\n";
 	    print RAW "         $aln_string\n";
 	    print RAW "Subject: $align2\n";
-	    print RAW "\nscore: $max_score\n";
+	    print RAW "\nIdentity: $percent_identity\n";
+	    print RAW "Score: $max_score\n";
 	}
 	else {
 	    my $fold = length($align1) / 80;
@@ -340,6 +367,11 @@ sub ReadFastaHeader
     close(IN);
     return(@Tmp);
 }
-
+sub Round
+{       my $number = $_[0];
+        my $digits = $_[1];
+        $number = (floor(((10**$digits) * $number) + 0.5))/10**$digits;
+        return $number;
+}
 
 exit 0;
