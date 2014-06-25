@@ -106,7 +106,7 @@ pod2usage(-verbose => 2)  if ($manual);
 pod2usage(-verbose => 1)  if ($help);
 pod2usage( -msg  => "\n\nERROR: Required arguments --fasta not found\n\n", -exitval => 2, -verbose => 1)  if (! $fasta);
 pod2usage( -msg  => "\n\nERROR: Required arguments --adapter not found\n\n", -exitval => 2, -verbose => 1)  if (! $adapter);
-pod2usage( -msg  => "\n\nERROR: --identity must be a whole number between 0 and 100\n\n", -exitval => 2, -verbose => 1)  if ( $identity > 100 || $identity < 0);
+pod2usage( -msg  => "\n\nERROR: --identity must be a whole number between 1 and 100\n\n", -exitval => 2, -verbose => 1)  if ( $identity > 100 || $identity < 1);
 my $identity_string = $identity;
 $identity_string = 100 - $identity_string;
 $identity_string = $identity_string . "%";
@@ -114,6 +114,19 @@ $identity_string = $identity_string . "%";
 print `mkdir find_adapt_out`;
 print `mkdir find_adapt_out/$identity`;
 
+my %Ambig = (
+    "W" => "A,T",
+    "S" => "C,G",
+    "M" => "A,C",
+    "K" => "G,T",
+    "R" => "A,G",
+    "Y" => "C,T",
+    "B" => "C,G,T",
+    "D" => "A,G,T",
+    "H" => "A,C,T",
+    "V" => "A,C,G",
+    "N" => "A,C,G,T"
+    );
 my %Adapters;
 my @Adapt;
 open(IN,"<$adapter") || die "\n\n Cannot open adapter lookup file: $adapter\n\n";
@@ -143,6 +156,11 @@ for (my $i=0; $i < scalar(@Adapt); $i++) {
 	my $forward;
 	my $n_seqs = 0;
 	$adapter = $Adapters{$Adapt[$i]};
+	uc($adapter);
+	my $valid_bases = $adapter =~ tr/ATGC/ATGC/;
+	if ($valid_bases == length($adapter)) {
+	    
+	}
 	while(<IN>) {
 	    chomp;
 	    if ($_ =~ m/^>/) {
