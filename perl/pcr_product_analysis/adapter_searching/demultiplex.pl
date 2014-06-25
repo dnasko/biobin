@@ -139,6 +139,8 @@ else {print "No.\n\n"}
 ## Creating output / working directories
 print `mkdir -p $outdir`;
 print `mkdir -p $outdir/$identity`;
+print `mkdir -p $outdir/$identity/demltiplxd`;
+print `mkdir -p $outdir/$identity/nil`;
 
 ## Preprocessing / Hash construction
 my $id_string = form_id_string($identity);
@@ -202,14 +204,70 @@ close(IN);
 
 
 ## Now search for each of the adapters
-foreach my $adp (@adapters) {
-    print "$$adp[0]\n";
-    for(my $i=1;$i<scalar(@$adp);$i++) {
-	print "\t$$adp[$i]\n";
+
+# foreach my $adp (@adapters) {
+#     my @EachAdp = @$adp;
+#     print "$EachAdp[0]\n";
+# }
+
+for (my $i=0; $i<scalar(@adapters);$i++) {
+    my @EachAdp = $adapters[$i];
+    my $adapter_name = $EachAdp[0][0];
+    for(my $j=1;$j<scalar(@{$adapters[$i]});$j++) {
+    	my $adapter_sequence = ${$adapters[$i]}[$j];
+    	if ($i == 0) {
+	    # &find_adapt($fasta, $adapter_sequence);
+	} 
+	else {
+	    my $previous_adapter_name;
+	    my @PrevEachAdp = $adapters[$i-1];
+	    $previous_adapter_name = $PrevEachAdp[0][0];
+	    # 
+	}
     }
 }
 
 
+
+## SUBROUTINES
+##############################
+## head($seq, 40);
+## Grabs the first n chars from string m
+## RETURNS: first n chars from string m
+sub head
+{
+    my $string = $_[0];
+    my $chars_to_grab = $_[1];
+    my $head = substr $string, 0, $chars_to_grab;
+    return($head);
+}
+##############################
+## tail($seq, 50)
+## Grabs the last n chars from string m
+## RETURNS: last n chars from string m
+sub tail
+{
+    my $string = $_[0];
+    my $chars_to_grab =$_[1];
+    $chars_to_grab *= -1;
+    my $tail = substr $string, $chars_to_grab;
+    return($tail);
+}
+##############################
+## revcomp($nt_seq)
+## Reverse compliment a nucleotide sequence
+## RETURNS: The reverse compliment of a NT sequence
+sub revcomp
+{
+    my $nulceotide_sequence = $_[0];
+    my $rev_comp_seq = scalar reverse $nulceotide_sequence;
+    $rev_comp_seq =~ tr/ATGCatgc/TACGTACG/;
+    return($rev_comp_seq);
+}
+##############################
+## form_id_string($float_point_identity)
+## format the ID string for String::Approx
+## RETURNS: Formatted ID string for String::Approx
 sub form_id_string
 {
     my $id = $_[0];
@@ -217,7 +275,10 @@ sub form_id_string
     $string = $string . "%";
     return $string;
 }
-
+##############################
+## construct_hash()
+## Creates a hash of arrays containing ambiguous bases
+## RETURNS: A hash of arrays of ambiguous bases
 sub construct_hash
 {
     my %hash = (
@@ -235,5 +296,16 @@ sub construct_hash
 	);
     return(%hash);
 }
+##############################
+## find_adapt($file_name, $adapter)
+## Search for adapter in the FASTA file
+## RETURNS: Nothing. Just writes outputs.
+sub find_adapt
+{
+    my $fasta_file       = $_[0];
+    my $adapter_sequence = $_[1];
+    
+}
 
+## donions
 exit 0;
