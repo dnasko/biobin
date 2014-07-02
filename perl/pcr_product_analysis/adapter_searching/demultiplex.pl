@@ -124,6 +124,7 @@ pod2usage( -msg  => "\n\nERROR: --identity must be an int between 0 and 1\n\n", 
 ## Global Variables
 my $version = "1.0";
 my @adapters;
+my %adp_counts;
 
 ## Logging
 print "
@@ -135,6 +136,9 @@ print "
  trim: ";
 if ($trim) { $trim = 1; print "YES\n\n"}
 else {print "No.\n\n"}
+
+## Read FASTA file into a hash
+my %Fasta = read_fasta_hash($fasta);
 
 ## Creating output / working directories
 print `mkdir -p $outdir`;
@@ -202,34 +206,77 @@ while(<IN>) {
 }
 close(IN);
 
-
+##
 ## Now search for each of the adapters
-
-# foreach my $adp (@adapters) {
-#     my @EachAdp = @$adp;
-#     print "$EachAdp[0]\n";
-# }
-
+##
 for (my $i=0; $i<scalar(@adapters);$i++) {
     my @EachAdp = $adapters[$i];
     my $adapter_name = $EachAdp[0][0];
+    my %found;
     for(my $j=1;$j<scalar(@{$adapters[$i]});$j++) {
     	my $adapter_sequence = ${$adapters[$i]}[$j];
-    	if ($i == 0) {
-	    # &find_adapt($fasta, $adapter_sequence);
-	} 
-	else {
-	    my $previous_adapter_name;
-	    my @PrevEachAdp = $adapters[$i-1];
-	    $previous_adapter_name = $PrevEachAdp[0][0];
-	    # 
+	my @found = find_adapt($adapter_sequence);
+	foreach my $i (@found) {
+	    unless (exists $found{$i}) {
+		$found{$i} = 1;
+		$adp_counts{$adapter_name}++;
+	    }
 	}
     }
+    my $dump = dump_results($adapter_name,\%found);
 }
 
-
+## Spit out how many reads we found for each adapter. 
+##
+print STDOUT " Reads found for each adapter:\n";
+foreach my $adp (@adapters) {
+    if (exists $adp_counts{$$adp[0]}) {
+	print STDOUT "\t$$adp[0]\t$adp_counts{$$adp[0]}\n";
+    }
+    else {
+	die " ERROR: Missing counts inforamtion for the following adapter: $adp_counts{$$adp[0]}\n\n";
+    }
+}
+print STDOUT "\n\n";
 
 ## SUBROUTINES
+##############################
+## read_fasta_hash($infile)
+## Reads a FASTA file into a hash
+## RETURNS: A hash containing a FASTA file
+sub read_fasta_hash
+{
+    my $infile = $_[0];
+    my %tmp_fasta;
+    my ($tmp_header,$tmp_sequence);
+    my $counter = 0;
+    if ($infile =~ m/\.gz$/) {
+        open(IN,"gunzip -c $infile |") || die "\n\n Cannot open the FASTA: $infile\n\n";
+    }
+    else {
+        open(IN,"<$infile") || die "\n\n Cannot open the FASTA: $infile\n\n";
+    }
+    while(<IN>) {
+        chomp;
+	if ($counter == 0) { 
+	    $tmp_header = $_;
+	    $tmp_header =~ s/^>//;
+	}
+	elsif ($_ =~ m/^>/) {
+	    $tmp_fasta{$tmp_header} = $tmp_sequence;
+	    $tmp_sequence = "";
+	    $tmp_header = $_;
+	    $tmp_header =~ s/^>//;
+	}
+	else {
+	    $tmp_sequence = $tmp_sequence . $_;
+	}
+	$counter++;
+    }
+    close(IN);
+    $tmp_fasta{$tmp_header} = $tmp_sequence;
+    return(%tmp_fasta);
+}
 ##############################
 ## head($seq, 40);
 ## Grabs the first n chars from string m
@@ -297,14 +344,116 @@ sub construct_hash
     return(%hash);
 }
 ##############################
-## find_adapt($file_name, $adapter)
-## Search for adapter in the FASTA file
-## RETURNS: Nothing. Just writes outputs.
+## find_adapt($adapter_seq)
+## Search for adapter in %Fasta
+## %Fasta MUST already exist!
+## RETURNS: Array of headers that have adapter.
 sub find_adapt
 {
-    my $fasta_file       = $_[0];
-    my $adapter_sequence = $_[1];
-    
+    my $adapter_sequence = $_[0];
+    my @matches;
+    foreach my $header (keys %Fasta) {
+	my $sequence = $Fasta{$header};
+	my $rev_sequence = revcomp($sequence);
+	my $head_for = head($sequence, $window);
+	my $tail_for = tail($sequence, $window);
+	my $head_rev = head($rev_sequence, $window);
+	my $tail_rev = tail($rev_sequence, $window);
+	if (amatch ($adapter_sequence,[ $id_string ], $head_for)) {
+	    push(@matches, $header);
+	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 1);
+			      $Fasta{$header} = $trimmed_seq;}
+	}
+	elsif (amatch ($adapter_sequence,[ $id_string ], $tail_for)) {
+	    push(@matches, $header);
+	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 2);
+			      $Fasta{$header} = $trimmed_seq;} 
+	}
+	elsif (amatch ($adapter_sequence,[ $id_string ], $head_rev)) {
+            push(@matches, $header);
+	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 3);
+			      $Fasta{$header} = $trimmed_seq;} 
+	}
+	elsif (amatch ($adapter_sequence,[ $id_string ], $tail_rev)) {
+            push(@matches, $header);
+	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 4);
+			      $Fasta{$header} = $trimmed_seq;} 
+	}
+    }
+    return(@matches);
+}
+##############################
+## dump_results($adapter_name, %found)
+## Dump out results for a hash
+## RETURNS: Nothing. Just writes outputs. 
+sub dump_results
+{
+    my $adapter_name = $_[0];
+    my %found = %{$_[1]};
+    my $output_good_file = "$outdir/$identity/demltiplxd/" . $adapter_name . ".fasta";
+    my $output_nil_file = "$outdir/$identity/nil/" . $adapter_name . ".nil.fasta";
+    open(OUTG,">$output_good_file") || die "Cannot write to the following file: $outdir/$identity/demltiplxd/$adapter_name.fasta\n\n";
+    open(OUTN,">$output_nil_file") || die "Cannot write to the following: $outdir/$identity/nil/$adapter_name.nil.fasta\n\n";
+    foreach my $seq (keys %Fasta) {
+	if (exists $found{$seq}) {
+	    print OUTG ">$seq\n$Fasta{$seq}\n";
+	    delete $Fasta{$seq};
+	}
+	else {
+	    print OUTN ">$seq\n$Fasta{$seq}\n";
+	}
+    }
+    close(OUTG);
+    close(OUTN);
+}
+##############################
+## trim_adapter($adapter_seq, $header_name, 2)
+## Trim the adapter sequence from the sequence of interest
+## %Fasta must exist already!
+## Flag meanings:
+##   1 = primer at 5' end in fr orientation
+##   2 = primer at 3' end in fr orientation
+##   3 = primer at 5' end in rc orientation
+##   4 = primer at 3' end in rc orientation
+## RETURNS: Trimmed and reoriented sequence.
+sub trim_adapter
+{
+    my $adapter_seq = $_[0];
+    my $header = $_[1];
+    my $flag = $_[2];
+    my $sequence = $Fasta{$header};
+    if ($flag == 3 || $flag == 4) {	$sequence = revcomp($sequence);    }
+    my @Sequence = split(//, $sequence);
+    if ($flag == 1 || $flag == 3) {
+	my $splice_position = -1;
+	for (my $i=0;$i<$window-length($adapter_seq)+1;$i++) {
+	    my $sliding_window = substr $sequence, $i, length($adapter_seq);
+	    if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
+		$splice_position = $i;
+	    }
+	}
+	if ($splice_position < 0) { die " \n Error! Unable to trim this sequence: $header\n" }
+	else {
+	    $splice_position += length($adapter_seq);
+	    my $trimmed_sequence = substr $sequence, $splice_position;
+	    return($trimmed_sequence);
+	}
+    }
+    else {
+	my $splice_position = 1;
+	for (my $i=-length($adapter_seq);$i>=-$window;$i--) {
+	    my $sliding_window = substr $sequence, $i, length($adapter_seq);
+	    if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
+		$splice_position = $i;
+	    }
+	}    
+	if ($splice_position > 0) { die " \n Error! Unable to trim this sequence: $header\n"; }
+	else {
+	    $splice_position -= length($adapter_seq);
+	    my $trimmed_sequence = substr $sequence, 0, length($sequence)+$splice_position;
+	    return($trimmed_sequence);
+	}
+    }
 }
 
 ## donions
