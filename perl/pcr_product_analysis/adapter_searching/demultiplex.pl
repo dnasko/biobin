@@ -135,7 +135,7 @@ print "
  matching at: $identity
  trim: ";
 if ($trim) { $trim = 1; print "YES\n\n"}
-else {print "No.\n\n"}
+else {$trim = 0; print "No.\n\n"}
 
 ## Read FASTA file into a hash
 my %Fasta = read_fasta_hash($fasta);
