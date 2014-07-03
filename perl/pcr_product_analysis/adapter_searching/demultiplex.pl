@@ -234,7 +234,7 @@ foreach my $adp (@adapters) {
 	print STDOUT "\t$$adp[0]\t$adp_counts{$$adp[0]}\n";
     }
     else {
-	die " ERROR: Missing counts inforamtion for the following adapter: $adp_counts{$$adp[0]}\n\n";
+	print STDOUT "\t$$adp[0]\t0\n";
     }
 }
 print STDOUT "\n\n";
