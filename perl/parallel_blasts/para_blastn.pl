@@ -129,7 +129,7 @@ chomp($seqs);
 
 ## Create the working directory, then make blastdb and execute blastn
 if ($threads == 1) {
-    print `$program -query $query -db $db -out $out -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 50`;
+    print `$program -query $query -db $db -out $out -outfmt $outfmt -evalue $evalue -num_threads 1`;
 }
 else {
     print `mkdir -p $tmp_file`;
@@ -142,7 +142,7 @@ else {
     print `perl $script_working_dir/bin/splitFASTA.pl $query $tmp_file split $seqs_per_file`;
     print `mkdir -p $tmp_file/btab_splits`;
     for (my $i=1; $i<=$threads; $i++) {
-	my $blast_exe = "$program -query $tmp_file/split-$i.fsa -db $db -out $tmp_file/btab_splits/split.$i.btab -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 500";
+	my $blast_exe = "$program -query $tmp_file/split-$i.fsa -db $db -out $tmp_file/btab_splits/split.$i.btab -outfmt $outfmt -evalue $evalue -num_threads 1 -word_size 7";
 	push (@THREADS, threads->create('task',"$blast_exe"));
     }
     foreach my $thread (@THREADS) {

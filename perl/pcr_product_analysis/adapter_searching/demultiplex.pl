@@ -423,15 +423,10 @@ sub trim_adapter
     my $flag = $_[2];
     my $sequence = $Fasta{$header};
     if ($flag == 3 || $flag == 4) {	$sequence = revcomp($sequence);    }
-    my @Sequence = split(//, $sequence);
     if ($flag == 1 || $flag == 3) {
-	my $splice_position = -1;
-	for (my $i=0;$i<$window-length($adapter_seq)+1;$i++) {
-	    my $sliding_window = substr $sequence, $i, length($adapter_seq);
-	    if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
-		$splice_position = $i;
-	    }
-	}
+	my $splice_position = find_splice($adapter_seq,$sequence,0,-1);
+	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,-1); }
+	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,-1); }
 	if ($splice_position < 0) { die " \n Error! Unable to trim this sequence: $header\n" }
 	else {
 	    $splice_position += length($adapter_seq);
@@ -440,20 +435,51 @@ sub trim_adapter
 	}
     }
     else {
-	my $splice_position = 1;
-	for (my $i=-length($adapter_seq);$i>=-$window;$i--) {
-	    my $sliding_window = substr $sequence, $i, length($adapter_seq);
-	    if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
-		$splice_position = $i;
-	    }
-	}    
+	my $splice_position = find_splice($adapter_seq,$sequence,0,1);
+	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,1); }
+	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,1); }
 	if ($splice_position > 0) { die " \n Error! Unable to trim this sequence: $header\n"; }
+
+	# for (my $i=-length($adapter_seq);$i>=-$window;$i--) {
+	#     my $sliding_window = substr $sequence, $i, length($adapter_seq);
+	#     if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
+	# 	$splice_position = $i;
+	#     }
+	# }    
 	else {
 	    $splice_position -= length($adapter_seq);
 	    my $trimmed_sequence = substr $sequence, 0, length($sequence)+$splice_position;
 	    return($trimmed_sequence);
 	}
     }
+}
+##############################
+## find_splice($adapter, $sequence, $sliding_extension, $splice_position)
+## Find where in the sequence an adapter is
+## RETURNS: position to splice
+sub find_splice
+{
+    my $adapter_seq = $_[0];
+    my $sequence = $_[1];
+    my $sliding_extension = $_[2];
+    my $splice_position = $_[3];
+    if ($splice_position < 0) {
+	for (my $i=0;$i<=$window-length($adapter_seq)+$sliding_extension;$i++) {
+	    my $sliding_window = substr $sequence, $i, length($adapter_seq)+$sliding_extension;
+	    if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
+		$splice_position = $i;
+	    }
+	}
+    }
+    else {
+	for (my $i=-length($adapter_seq);$i>=-$window;$i--) {
+            my $sliding_window = substr $sequence, $i, length($adapter_seq);
+            if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
+                $splice_position = $i;
+            }
+        }
+    }
+    return($splice_position);
 }
 
 ## donions
