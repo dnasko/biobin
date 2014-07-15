@@ -425,30 +425,43 @@ sub trim_adapter
     if ($flag == 3 || $flag == 4) {	$sequence = revcomp($sequence);    }
     if ($flag == 1 || $flag == 3) {
 	my $splice_position = find_splice($adapter_seq,$sequence,0,-1);
+	my $trimmed_sequence;
 	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,-1); }
 	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,-1); }
 	if ($splice_position < 0) { die " \n Error! Unable to trim this sequence: $header\n" }
 	else {
-	    $splice_position += length($adapter_seq);
-	    my $trimmed_sequence = substr $sequence, $splice_position;
-	    return($trimmed_sequence);
+	    $splice_position += length($adapter_seq) - 2;
+	    $trimmed_sequence = substr $sequence, $splice_position;
+	    # return($trimmed_sequence);
+	}
+	## Now try to trim the RC adapter on th 3' end.
+	my $rev_adapter_seq = revcomp($adapter_seq);
+	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,1);
+	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,1,1); }
+	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,2,1); }
+	if ($splice_position > 0) {    return($trimmed_sequence); }
+	else {
+	    $trimmed_sequence = substr $trimmed_sequence, 0, length($trimmed_sequence)+$splice_position;
 	}
     }
     else {
 	my $splice_position = find_splice($adapter_seq,$sequence,0,1);
+	my $trimmed_sequence;
 	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,1); }
-	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,1); }
+	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,1); }
 	if ($splice_position > 0) { die " \n Error! Unable to trim this sequence: $header\n"; }
-
-	# for (my $i=-length($adapter_seq);$i>=-$window;$i--) {
-	#     my $sliding_window = substr $sequence, $i, length($adapter_seq);
-	#     if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
-	# 	$splice_position = $i;
-	#     }
-	# }    
 	else {
-	    $splice_position -= length($adapter_seq);
-	    my $trimmed_sequence = substr $sequence, 0, length($sequence)+$splice_position;
+	    $trimmed_sequence = substr $sequence, 0, length($sequence)+$splice_position;
+	}
+	## Now try to trim RC adapter on 5' end.
+	my $rev_adapter_seq = revcomp($adapter_seq);
+	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,-1);
+	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$trimmed_sequence,1,-1); }
+        if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$trimmed_sequence,2,-1); }
+	if ($splice_position < 0) {    return($trimmed_sequence);}
+	else {
+	    $splice_position += length($adapter_seq) - 2;
+	    $trimmed_sequence = substr $trimmed_sequence, $splice_position;
 	    return($trimmed_sequence);
 	}
     }
@@ -473,7 +486,7 @@ sub find_splice
     }
     else {
 	for (my $i=-length($adapter_seq);$i>=-$window;$i--) {
-            my $sliding_window = substr $sequence, $i, length($adapter_seq);
+	    my $sliding_window = substr $sequence, $i, length($adapter_seq);
             if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
                 $splice_position = $i;
             }
