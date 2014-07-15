@@ -122,7 +122,7 @@ pod2usage( -msg  => "\n\nERROR: Required arguments --adapter not found\n\n", -ex
 pod2usage( -msg  => "\n\nERROR: --identity must be an int between 0 and 1\n\n", -exitval => 2, -verbose => 1)  if ( $identity > 1 || $identity < 0);
 
 ## Global Variables
-my $version = "1.0";
+my $version = "2.1";
 my @adapters;
 my %adp_counts;
 
