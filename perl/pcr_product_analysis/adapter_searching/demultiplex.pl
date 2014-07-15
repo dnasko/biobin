@@ -122,9 +122,10 @@ pod2usage( -msg  => "\n\nERROR: Required arguments --adapter not found\n\n", -ex
 pod2usage( -msg  => "\n\nERROR: --identity must be an int between 0 and 1\n\n", -exitval => 2, -verbose => 1)  if ( $identity > 1 || $identity < 0);
 
 ## Global Variables
-my $version = "2.1";
+my $version = "2.2";
 my @adapters;
 my %adp_counts;
+my %trim_coord;
 
 ## Logging
 print "
@@ -238,6 +239,13 @@ foreach my $adp (@adapters) {
     }
 }
 print STDOUT "\n\n";
+if ($trim == 1) {
+    print STDOUT " Trimming Location Frequency:\n";
+    foreach my $coord (sort {$a<=>$b} keys %trim_coord) {
+	print " $coord\t$trim_coord{$coord}\n";
+    }
+}
+print STDOUT "\n\n";
 
 ## SUBROUTINES
 ##############################
@@ -263,7 +271,9 @@ sub read_fasta_hash
 	    $tmp_header =~ s/^>//;
 	}
 	elsif ($_ =~ m/^>/) {
-	    $tmp_fasta{$tmp_header} = $tmp_sequence;
+	    if (length($tmp_sequence) > $window*2) {
+		$tmp_fasta{$tmp_header} = $tmp_sequence;
+	    }
 	    $tmp_sequence = "";
 	    $tmp_header = $_;
 	    $tmp_header =~ s/^>//;
@@ -432,16 +442,18 @@ sub trim_adapter
 	else {
 	    $splice_position += length($adapter_seq) - 2;
 	    $trimmed_sequence = substr $sequence, $splice_position;
-	    # return($trimmed_sequence);
+	    $trim_coord{$splice_position}++;
 	}
 	## Now try to trim the RC adapter on th 3' end.
 	my $rev_adapter_seq = revcomp($adapter_seq);
 	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,1);
 	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,1,1); }
 	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,2,1); }
+	
 	if ($splice_position > 0) {    return($trimmed_sequence); }
 	else {
 	    $trimmed_sequence = substr $trimmed_sequence, 0, length($trimmed_sequence)+$splice_position;
+	    $trim_coord{$splice_position}++;
 	}
     }
     else {
@@ -452,6 +464,7 @@ sub trim_adapter
 	if ($splice_position > 0) { die " \n Error! Unable to trim this sequence: $header\n"; }
 	else {
 	    $trimmed_sequence = substr $sequence, 0, length($sequence)+$splice_position;
+	    $trim_coord{$splice_position}++;
 	}
 	## Now try to trim RC adapter on 5' end.
 	my $rev_adapter_seq = revcomp($adapter_seq);
@@ -462,6 +475,7 @@ sub trim_adapter
 	else {
 	    $splice_position += length($adapter_seq) - 2;
 	    $trimmed_sequence = substr $trimmed_sequence, $splice_position;
+	    $trim_coord{$splice_position}++;
 	    return($trimmed_sequence);
 	}
     }
@@ -485,8 +499,9 @@ sub find_splice
 	}
     }
     else {
-	for (my $i=-length($adapter_seq);$i>=-$window;$i--) {
-	    my $sliding_window = substr $sequence, $i, length($adapter_seq);
+	for (my $i=-length($adapter_seq);$i>=-$window-$sliding_extension;$i--) {
+	    # print "STUFF: $i\t$sequence\n";
+	    my $sliding_window = substr $sequence, $i, length($adapter_seq)+$sliding_extension;
             if (amatch ($adapter_seq,[ $id_string ], $sliding_window)) {
                 $splice_position = $i;
             }
