@@ -122,7 +122,7 @@ pod2usage( -msg  => "\n\nERROR: Required arguments --adapter not found\n\n", -ex
 pod2usage( -msg  => "\n\nERROR: --identity must be an int between 0 and 1\n\n", -exitval => 2, -verbose => 1)  if ( $identity > 1 || $identity < 0);
 
 ## Global Variables
-my $version = "2.2";
+my $version = "2.3";
 my @adapters;
 my %adp_counts;
 my %trim_coord;
@@ -156,6 +156,7 @@ open(IN,"<$adapter") || die "\n Error! Cannot open or find the adapter file $ada
 while(<IN>) {
     chomp;
     my @col = split(/\t/, $_);
+    unless (scalar(@col) == 2) { die " Error: Make sure your adapter lookup file is delimmited by tabs, not spaces\n\n ";}
     my $name = $col[0];
     my $seq = uc($col[1]);
     my $valid_bases = $seq =~ tr/ATGC/ATGC/;
@@ -242,7 +243,7 @@ print STDOUT "\n\n";
 if ($trim == 1) {
     print STDOUT " Trimming Location Frequency:\n";
     foreach my $coord (sort {$a<=>$b} keys %trim_coord) {
-	print " $coord\t$trim_coord{$coord}\n";
+	print STDOUT " $coord\t$trim_coord{$coord}\n";
     }
 }
 print STDOUT "\n\n";
@@ -377,17 +378,17 @@ sub find_adapt
 	elsif (amatch ($adapter_sequence,[ $id_string ], $tail_for)) {
 	    push(@matches, $header);
 	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 2);
-			      $Fasta{$header} = $trimmed_seq;} 
+			      $Fasta{$header} = $trimmed_seq;}
 	}
 	elsif (amatch ($adapter_sequence,[ $id_string ], $head_rev)) {
             push(@matches, $header);
 	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 3);
-			      $Fasta{$header} = $trimmed_seq;} 
+			      $Fasta{$header} = $trimmed_seq;}
 	}
 	elsif (amatch ($adapter_sequence,[ $id_string ], $tail_rev)) {
             push(@matches, $header);
 	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 4);
-			      $Fasta{$header} = $trimmed_seq;} 
+			      $Fasta{$header} = $trimmed_seq;}
 	}
     }
     return(@matches);
@@ -449,11 +450,11 @@ sub trim_adapter
 	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,1);
 	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,1,1); }
 	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,2,1); }
-	
 	if ($splice_position > 0) {    return($trimmed_sequence); }
 	else {
 	    $trimmed_sequence = substr $trimmed_sequence, 0, length($trimmed_sequence)+$splice_position;
 	    $trim_coord{$splice_position}++;
+	    return($trimmed_sequence);
 	}
     }
     else {
