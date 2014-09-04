@@ -179,17 +179,13 @@ while(<IN>) {
 	for(my $i=0;$i<scalar(@Seq);$i++) {
 	    if ($Seq[$i] !~ m/A|T|C|G/) {
 		if (exists $AmbigBases{$Seq[$i]}) {
-		    my $local_counter = 0;
-		    for (my $j=1; $j <= $combos; $j++) {
-			if ($local_counter >= scalar(@{$AmbigBases{$Seq[$i]}})) {
-			    $local_counter = 0;
-			    $Combo{$j} = $Combo{$j} . ${$AmbigBases{$Seq[$i]}}[$local_counter];
-			}
-			else {
-			    $Combo{$j} = $Combo{$j} . ${$AmbigBases{$Seq[$i]}}[$local_counter];
-			}
-			$local_counter++;
-		    }  
+		    my $local_count = 0;
+		    my @keys = sort { $Combo{$a} cmp $Combo{$b} } keys(%Combo);
+		    foreach my $j (@keys) {
+			$Combo{$j} = $Combo{$j} . ${$AmbigBases{$Seq[$i]}}[$local_count];
+			$local_count++;
+			if ($local_count == scalar(@{$AmbigBases{$Seq[$i]}})) { $local_count = 0; } 
+		    }
 		}
 		else {  die "\n Error: Primer/Adapter contains invalid ambgious base: $Seq[$i]\n Only A,C,G,T,W,S,M,K,R,Y,B,D,H,V, and N are acceptable.\n\n"; } 
 	    }
