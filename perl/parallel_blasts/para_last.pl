@@ -1,16 +1,16 @@
 #!/usr/bin/perl -w
 
-# MANUAL FOR para_blastp.pl
+# MANUAL FOR para_last.pl
 
 =pod
 
 =head1 NAME
 
-para_blastp.pl -- embarasingly parallel tBLASTx
+para_last.pl -- embarasingly parallel LAST
 
 =head1 SYNOPSIS
 
- para_blastp.pl -query /path/to/infile.fasta -db /path/to/db -out /path/to/output.btab -evalue 1e-3 -outfmt 6 -threads 1
+ para_last.pl -query /path/to/infile.fasta -db /path/to/db -out /path/to/output.maf -e 131 -outfmt 1 -threads 1 -m 100 -F 15 -p BL80
                      [--help] [--manual]
 
 =head1 DESCRIPTION
@@ -31,25 +31,33 @@ Input subject DB. (Required)
 
 Path to output btab file. (Required)
 
-=item B<-e, --evalue>=INT
+=item B<-e, --score>=INT
 
-E-value. (Default = 10)
+E-value. (Default = 131)
 
 =item B<-f, --outfmt>=INT
 
-Output format. (Default = 6)
+Output format. (Default = 1)
 
 =item B<-t, --threads>=INT
 
 Number of CPUs to use. (Default = 1)
 
+=item B<-m, --max>=INT
+
+maximum initial matches per query position. (Default = 10)
+
+=item B<-F, --frameshift>=INT
+
+Frameshift cost. (Deafult = 15)
+
+=item B<-p, --matrix>=INT
+
+Protein substitutiton matrix. (Default=BL62)
+
 =item B<-h, --help>
 
 Displays the usage message.  (Optional) 
-
-=item B<-m, --manual>
-
-Displays full manual.  (Optional) 
 
 =back
 
@@ -91,37 +99,52 @@ use Cwd 'abs_path';
 my $script_working_dir = $FindBin::Bin;
 
 #ARGUMENTS WITH NO DEFAULT
-my($query,$db,$out,$help,$manual);
+my($query,$db,$out,$help);
+
+## With Defaults
 my $threads = 1;
-my $evalue = 10;
-my $outfmt = 6;
+my $score = 131;
+my $outfmt = 1;
+my $m = 10;
+my $frameshift = 15;
+my $matrix = "BL62";
 my @THREADS;
 
 GetOptions (	
 				"q|query=s"	=>	\$query,
                                 "d|db=s"        =>      \$db,
                                 "o|out=s"       =>      \$out,
-                                "e|evalue=s"    =>      \$evalue,
+                                "e|score=s"     =>      \$score,
                                 "f|outfmt=s"    =>      \$outfmt,
                                 "t|threads=i"   =>      \$threads,
-             			"h|help"	=>	\$help,
-				"m|manual"	=>	\$manual);
+                                "m|max=i"       =>      \$m,
+                                "r|frameshift=i" =>     \$frameshift,
+                                "p|matrix=s"    =>      \$matrix,
+                                "h|help"	=>	\$help);
 
 # VALIDATE ARGS
-pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
 pod2usage( -msg  => "\n\n ERROR!  Required arguments --query not found.\n\n", -exitval => 2, -verbose => 1)  if (! $query );
-my $program = "blastp";
+pod2usage( -msg  => "\n\n ERROR!  Required arguments --db not found.\n\n", -exitval => 2, -verbose => 1)  if (! $db );
+pod2usage( -msg  => "\n\n ERROR!  Required arguments --out not found.\n\n", -exitval => 2, -verbose => 1)  if (! $out );
+
+my $program = "lastal";
 my @chars = ("A".."Z", "a".."z");
 my $rand_string;
 $rand_string .= $chars[rand @chars] for 1..8;
 my $tmp_file = "./$program" . "_tmp_" . $rand_string;
 
 ## Check that blastn and makeblastdb are installed on this machine
-my $PROG = `which $program`; unless ($PROG =~ m/$program/) { die "\n\n ERROR: External dependency '$program' not installed in system PATH\n\n (ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/)\n\n";}
+my $PROG = `which $program`; unless ($PROG =~ m/$program/) { die "\n\n ERROR: External dependency '$program' not installed in system PATH\n\n";}
 my $date = `date`;
 print STDERR " Using $threads threads\n";
 print STDERR " Using this BLAST: $PROG Beginning: $date\n";
+print STDERR "
+ m = $m
+ F = $frameshift
+ e = $score
+ p = $matrix\n
+";
 
 ## All clear, time to set up some globals
 my $seqs = `egrep -c "^>" $query`;
@@ -129,7 +152,7 @@ chomp($seqs);
 
 ## Create the working directory, then make blastdb and execute blastn
 if ($threads == 1) {
-    print `$program -query $query -db $db -out $out -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 50`;
+    print `$program -F $frameshift -e $score -p $matrix -m $m -o $out $db $query`;
 }
 else {
     print `mkdir -p $tmp_file`;
@@ -142,7 +165,7 @@ else {
     print `perl $script_working_dir/bin/splitFASTA.pl $query $tmp_file split $seqs_per_file`;
     print `mkdir -p $tmp_file/btab_splits`;
     for (my $i=1; $i<=$threads; $i++) {
-	my $blast_exe = "$program -query $tmp_file/split-$i.fsa -db $db -out $tmp_file/btab_splits/split.$i.btab -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 1";
+	my $blast_exe = "$program -F $frameshift -e $score -p $matrix -m $m -o $tmp_file/btab_splits/split.$i.maf $db $tmp_file/split-$i.fsa";
 	push (@THREADS, threads->create('task',"$blast_exe"));
     }
     foreach my $thread (@THREADS) {
@@ -152,7 +175,7 @@ else {
     print `rm -rf $tmp_file`;
 }
 $date = `date`;
-print STDERR "\n BLAST complete: $date\n";
+print STDERR "\n LAST complete: $date\n";
 
 sub task
 {
