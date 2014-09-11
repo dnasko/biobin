@@ -126,6 +126,7 @@ my $version = "2.3";
 my @adapters;
 my %adp_counts;
 my %trim_coord;
+my %is_reverse;
 
 ## Logging
 print "
@@ -380,11 +381,13 @@ sub find_adapt
             push(@matches, $header);
 	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 3);
 			      $Fasta{$header} = $trimmed_seq;}
+	    $is_reverse{$header} = 1;
 	}
 	elsif (amatch ($adapter_sequence,[ $id_string ], $tail_rev)) {
             push(@matches, $header);
 	    if ($trim == 1) { my $trimmed_seq = trim_adapter($adapter_sequence, $header, 4);
 			      $Fasta{$header} = $trimmed_seq;}
+	    $is_reverse{$header} = 1;
 	}
     }
     return(@matches);
@@ -403,8 +406,16 @@ sub dump_results
     open(OUTN,">$output_nil_file") || die "Cannot write to the following: $outdir/$identity/nil/$adapter_name.nil.fasta\n\n";
     foreach my $seq (keys %Fasta) {
 	if (exists $found{$seq}) {
-	    print OUTG ">$seq\n$Fasta{$seq}\n";
-	    delete $Fasta{$seq};
+	    if (exists $is_reverse{$seq}) {
+		my $rev_seq = revcomp($Fasta{$seq});
+		print OUTG ">$seq\n$rev_seq\n";
+                delete $Fasta{$seq};
+		delete $is_reverse{$seq};
+	    }
+	    else {
+		print OUTG ">$seq\n$Fasta{$seq}\n";
+		delete $Fasta{$seq};
+	    }	
 	}
 	else {
 	    print OUTN ">$seq\n$Fasta{$seq}\n";
@@ -429,24 +440,32 @@ sub trim_adapter
     my $header = $_[1];
     my $flag = $_[2];
     my $sequence = $Fasta{$header};
+    my $not_at_beginning = 0; # set as false
     if ($flag == 3 || $flag == 4) {	$sequence = revcomp($sequence);    }
-    if ($flag == 1 || $flag == 3) {
+    if ($flag == 1 || $flag == 3) { ## If at the beginning of the seq
 	my $splice_position = find_splice($adapter_seq,$sequence,0,-1);
 	my $trimmed_sequence;
 	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,-1); }
 	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,-1); }
-	if ($splice_position < 0) { die " \n Error! Unable to trim this sequence: $header\n" }
+	if ($splice_position < 0) { $not_at_beginning = 1; }
 	else {
 	    $splice_position += length($adapter_seq) - 2;
 	    $trimmed_sequence = substr $sequence, $splice_position;
 	    $trim_coord{$splice_position}++;
 	}
-	## Now try to trim the RC adapter on th 3' end.
+	## Now try to trim the RC adapter on the 3' end.
 	my $rev_adapter_seq = revcomp($adapter_seq);
 	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,1);
 	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,1,1); }
 	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,2,1); }
-	if ($splice_position > 0) {    return($trimmed_sequence); }
+	if ($splice_position > 0) {
+	    if ($not_at_beginning == 1) {
+		die " \n Error! Unable to trim this sequence: $header\n";
+	    }
+	    else {
+		return($trimmed_sequence);
+	    }
+	}
 	else {
 	    $trimmed_sequence = substr $trimmed_sequence, 0, length($trimmed_sequence)+$splice_position;
 	    $trim_coord{$splice_position}++;
@@ -458,7 +477,7 @@ sub trim_adapter
 	my $trimmed_sequence;
 	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,1); }
 	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,1); }
-	if ($splice_position > 0) { die " \n Error! Unable to trim this sequence: $header\n"; }
+	if ($splice_position > 0) {    $not_at_beginning = 1; }
 	else {
 	    $trimmed_sequence = substr $sequence, 0, length($sequence)+$splice_position;
 	    $trim_coord{$splice_position}++;
@@ -468,7 +487,14 @@ sub trim_adapter
 	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,-1);
 	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$trimmed_sequence,1,-1); }
         if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$trimmed_sequence,2,-1); }
-	if ($splice_position < 0) {    return($trimmed_sequence);}
+	if ($splice_position < 0) {
+	    if ($not_at_beginning == 1) {
+		die " \n Error! Unable to trim this sequence: $header\n";
+	    }
+	    else {
+		return($trimmed_sequence);
+	    }
+	}
 	else {
 	    $splice_position += length($adapter_seq) - 2;
 	    $trimmed_sequence = substr $trimmed_sequence, $splice_position;
