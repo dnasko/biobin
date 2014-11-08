@@ -1,16 +1,16 @@
 #!/usr/bin/perl -w
 
-# MANUAL FOR para_blastx.pl
+# MANUAL FOR para_tblastn.pl
 
 =pod
 
 =head1 NAME
 
-para_blastx.pl -- embarasingly parallel BLASTx
+para_tblastn.pl -- embarasingly parallel tBLASTn
 
 =head1 SYNOPSIS
 
- para_blastx.pl -query /path/to/infile.fasta -db /path/to/db -out /path/to/output.btab -evalue 1e-3 -outfmt 6 -threads 1
+ para_tblastn.pl -query /path/to/infile.fasta -db /path/to/db -out /path/to/output.btab -evalue 1e-3 -outfmt 6 -threads 1
                      [--help] [--manual]
 
 =head1 DESCRIPTION
@@ -111,7 +111,7 @@ GetOptions (
 pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
 pod2usage( -msg  => "\n\n ERROR!  Required arguments --query not found.\n\n", -exitval => 2, -verbose => 1)  if (! $query );
-my $program = "blastx";
+my $program = "tblastn";
 my @chars = ("A".."Z", "a".."z");
 my $rand_string;
 $rand_string .= $chars[rand @chars] for 1..8;
@@ -129,7 +129,7 @@ chomp($seqs);
 
 ## Create the working directory, then make blastdb and execute blastn
 if ($threads == 1) {
-    print `$program -query $query -db $db -out $out -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 50`;
+    print `$program -query $query -db $db -out $out -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 500`;
 }
 else {
     print `mkdir -p $tmp_file`;
@@ -142,7 +142,7 @@ else {
     print `perl $script_working_dir/bin/splitFASTA.pl $query $tmp_file split $seqs_per_file`;
     print `mkdir -p $tmp_file/btab_splits`;
     for (my $i=1; $i<=$threads; $i++) {
-	my $blast_exe = "$program -query $tmp_file/split-$i.fsa -db $db -out $tmp_file/btab_splits/split.$i.btab -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 1";
+	my $blast_exe = "$program -query $tmp_file/split-$i.fsa -db $db -out $tmp_file/btab_splits/split.$i.btab -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs 10";
 	push (@THREADS, threads->create('task',"$blast_exe"));
     }
     foreach my $thread (@THREADS) {

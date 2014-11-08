@@ -47,7 +47,7 @@ Number of CPUs to use. (Default = 1)
 
 maximum initial matches per query position. (Default = 10)
 
-=item B<-F, --frameshift>=INT
+=item B<-r, --frameshift>=INT
 
 Frameshift cost. (Deafult = 15)
 
