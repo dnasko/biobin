@@ -27,7 +27,7 @@ print `mkdir -p $tmp_file`;
 print `mkdir -p $tmp_file/mga`;
 print `mkdir -p $tmp_file/fasta`;
 print `mkdir -p $tmp_file/orf`;
-print `perl $script_working_dir/bin/splitFASTA.pl $infile $tmp_file split $seqs_per_file`;
+print `perl $script_working_dir/para_blast_bin/splitFASTA.pl $infile $tmp_file split $seqs_per_file`;
 print `mv $tmp_file/*.fsa $tmp_file/fasta`;
 
 for (my $i=1; $i<=$threads; $i++) {

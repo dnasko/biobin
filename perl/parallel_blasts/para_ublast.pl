@@ -133,7 +133,7 @@ else {
 	$seqs_per_file =~ s/\..*//;
 	$seqs_per_file++;
     }
-    print `perl $script_working_dir/bin/splitFASTA.pl $query $tmp_file split $seqs_per_file`;
+    print `perl $script_working_dir/para_blast_bin/splitFASTA.pl $query $tmp_file split $seqs_per_file`;
     print `mkdir -p $tmp_file/btab_splits`;
     for (my $i=1; $i<=$threads; $i++) {
 	my $blast_exe = "$program -ublast $tmp_file/split-$i.fsa -db $db -alnout $tmp_file/btab_splits/split.$i.btab -evalue $evalue";
