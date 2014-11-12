@@ -1,4 +1,4 @@
-#!/usr/binperl -w
+#!/usr/bin/perl -w
 
 # MANUAL FOR para_blastp.pl
 
