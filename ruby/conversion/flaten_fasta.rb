@@ -1,10 +1,19 @@
 #!/usr/bin/env ruby
 require 'getoptlong'
+require 'parse_fasta'
+
+## Copyright 2014 Daniel Nasko.
+## License GPLv3+: GPU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+## This is free software: you are free to change and redistribute it.
+## There is NO WARRENTY, to the extent permitted by law.
+## 
+## Please acknowledge author and affliliation in published work arising from thie script's
+## usage <http://bioinformatics.udel.edu/Core/Acknowledge>.
 
 opts = GetoptLong.new(
                       ['--in', '-i', GetoptLong::REQUIRED_ARGUMENT],
                       ['--out', '-o', GetoptLong::REQUIRED_ARGUMENT],
-                      [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
+                      ['--help', '-h', GetoptLong::NO_ARGUMENT ],
 )
 
 infile = nil
@@ -17,12 +26,14 @@ Usage:
      skeleton.rb -in /Path/to/infile.fasta -out /Path/to/output.txt
                          [-help]
 
+ Flatens a FASTA file!
+
 Options:
     -i, --in=FILENAME
-       Input file in XXX format. (Required)
+       Input file in FASTA format. (Required)
 
     -o, --out=FILENAME
-       Output file in YYY format. (Required)
+       Output file in FASTA format. (Required)
     
     -h, --help
        Displays the usage message. (Optional)
@@ -45,7 +56,10 @@ if out.nil?
   exit 0
 end
 
-puts "Infile = " + infile
-puts out
-
+# output = File.open( "outputfile.yml","w" )
+outfile = File.open( out,"w" )
+FastaFile.open(ARGV.first, 'r').each_record do |header, sequence|
+  outfile << ">#{header}\n#{sequence}"
+end
+outfile.close
 exit 0;
