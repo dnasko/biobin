@@ -117,6 +117,7 @@ if ($outfile eq "") {
 	}
 	$line_count++;
     }
+    print "\n";
 }
 else {
     open(OUT,">$outfile") || die "\n\n Error! Cannot open the output file: $outfile\n\n";
@@ -136,6 +137,7 @@ else {
         }
         $line_count++;
     }
+    print OUT "\n";
     close(OUT);
 }
 close(IN);

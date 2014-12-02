@@ -23,7 +23,7 @@ para_rpsblast.pl -- embarasingly parallel RPS-BLAST
 
 Input query file in FASTA format. (Required) 
 
-=item B<-d, --d>=FILENAME
+=item B<-d, --db>=FILENAME
 
 Input subject DB. (Required)
 
