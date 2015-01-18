@@ -165,14 +165,15 @@ else {
     print `perl $script_working_dir/para_blast_bin/splitFASTA.pl $query $tmp_file split $seqs_per_file`;
     print `mkdir -p $tmp_file/btab_splits`;
     for (my $i=1; $i<=$threads; $i++) {
-	my $blast_exe = "$program -F $frameshift -e $score -p $matrix -m $m -o $tmp_file/btab_splits/split.$i.maf $db $tmp_file/split-$i.fsa";
+	# my $blast_exe = "$program -F $frameshift -e $score -p $matrix -m $m -o $tmp_file/btab_splits/split.$i.maf $db $tmp_file/split-$i.fsa";
+	my $blast_exe = "$program -e $score -p $matrix -m $m -o $tmp_file/btab_splits/split.$i.maf $db $tmp_file/split-$i.fsa";
 	push (@THREADS, threads->create('task',"$blast_exe"));
     }
     foreach my $thread (@THREADS) {
 	$thread->join();
     }
     print `cat $tmp_file/btab_splits/* > $out`;
-    print `rm -rf $tmp_file`;
+    # print `rm -rf $tmp_file`;
 }
 $date = `date`;
 print STDERR "\n LAST complete: $date\n";
