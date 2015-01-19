@@ -1,8 +1,8 @@
 CC=g++
 
-hellomake: flaten_fasta.cc
-	$(CC) -c flaten_fasta.cc
-	$(CC) flaten_fasta.cc -o "flaten_fasta" -L flaten_fasta.o
+flaten_fasta.o: flaten_fasta.c++
+	$(CC) -c -o flaten_fasta.o flaten_fasta.c++
+	$(CC) -o flaten_fasta flaten_fasta.o -lm
 
 clean:
 	rm -f *.o flaten_fasta
