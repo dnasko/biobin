@@ -279,3 +279,9 @@ else {
 }
 close(OUTA);
 close(OUTN);
+
+open(IN,"<$aa_out") || die "\n Cannot open the file: $aa_out\n";
+while(<IN>) {
+    chomp;
+}
+close(IN);
