@@ -29,6 +29,10 @@ Input file in GFF format. (Required)
 =item B<-e, --extra>
 
 Flag indicating you want extra header info printed. (Optional)
+type=complete
+type=lack_start
+type=lack_stop
+type=lack_both
 
 =item B<-h, --help>
 
@@ -288,28 +292,34 @@ close(OUTN);
 
 if ($extra) {
     $header = "";
+    my %local_hash;
     open(IN,"<$aa_out") || die "\n Cannot open the file: $aa_out\n";
     open(OUT,">$aa_out.cp") || die "\n Cannot open the file: $aa_out.cp\n";
     while(<IN>) {
 	chomp;
 	if ($_ =~ m/^>/) {
 	    print OUT $_ . " type=";
+	    $header = $_;
 	}
 	else {
 	    if ($_ =~ m/^M/) {
 		if ($_ =~ m/\*/) {
 		    print OUT "complete";
+		    $local_hash{$header} = "complete";
 		}
 		else {
 		    print OUT "lack_stop";
+		    $local_hash{$header} = "lack_stop";
 		}
 	    }
 	    else {
 		if ($_ =~ m/\*/) {
 		    print OUT "lack_start";
+		    $local_hash{$header} = "lack_start";
 		}
 		else {
 		    print OUT "lack_both";
+		    $local_hash{$header} = "lack_both";
 		}
 	    }
 	    print OUT "\n$_\n";
@@ -317,8 +327,27 @@ if ($extra) {
     }
     close(IN);
     close(OUT);
-    
     print `mv $aa_out.cp $aa_out`;
+    
+    open(IN,"<$nt_out") || die "\n Cannot open the file: $nt_out\n";
+    open(OUT,">$nt_out.cp") || die "\n Cannot open the file: $nt_out.cp\n";
+    while(<IN>) {
+	chomp;
+	if ($_ =~ m/^>/) {
+	    if (exists $local_hash{$_}) {
+		print OUT $_ . " type=" . $local_hash{$_} . "\n";
+	    }
+	    else {
+		die "\n Woah! Trying to add the extra information for sequence: $_\n\n but can't find the info dawg.\n\n";
+	    }
+	}
+	else {
+	    print OUT $_ . "\n";
+	}
+    }
+    close(IN);
+    close(OUT);
+    print `mv $nt_out.cp $nt_out`;
 }
 
 exit 0;
