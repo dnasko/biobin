@@ -11,7 +11,7 @@ metagenemark2fasta.pl -- Converts MetaGeneMark gff output to FASTA
 =head1 SYNOPSIS
 
  metagenemark2fasta.pl --in /path/to/infile.gff
-                     [--help] [--manual]
+                       [--extra] [--help] [--manual]
 
 =head1 DESCRIPTION
 
@@ -25,6 +25,10 @@ metagenemark2fasta.pl -- Converts MetaGeneMark gff output to FASTA
 =item B<-i, --in>=FILENAME
 
 Input file in GFF format. (Required) 
+
+=item B<-e, --extra>
+
+Flag indicating you want extra header info printed. (Optional)
 
 =item B<-h, --help>
 
@@ -69,12 +73,13 @@ use File::Basename;
 use Pod::Usage;
 
 #ARGUMENTS WITH NO DEFAULT
-my($infile,$help,$manual);
+my($infile,$help,$manual,$extra);
 my $outdir = "./";
 
 GetOptions (
     "i|in=s"=>\$infile,
     "o|out=s" => \$outdir,
+    "e|extra" => \$extra,
     "h|help"=>\$help,
     "m|manual"=>\$manual);
 
@@ -82,6 +87,7 @@ GetOptions (
 pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
 pod2usage( -msg  => "\n\n ERROR!  Required argument --infile not found.\n\n", -exitval => 2, -verbose => 1)  if (! $infile );
+unless ($infile =~ m/\.gff$/) { die "\n ERROR: The input file should be in GFF format, and thus shoudl have a .gff extension.\n\n" }
 
 my $aa_out = $infile;
 my $nt_out = $infile;
@@ -280,8 +286,39 @@ else {
 close(OUTA);
 close(OUTN);
 
-open(IN,"<$aa_out") || die "\n Cannot open the file: $aa_out\n";
-while(<IN>) {
-    chomp;
+if ($extra) {
+    $header = "";
+    open(IN,"<$aa_out") || die "\n Cannot open the file: $aa_out\n";
+    open(OUT,">$aa_out.cp") || die "\n Cannot open the file: $aa_out.cp\n";
+    while(<IN>) {
+	chomp;
+	if ($_ =~ m/^>/) {
+	    print OUT $_ . " type=";
+	}
+	else {
+	    if ($_ =~ m/^M/) {
+		if ($_ =~ m/\*/) {
+		    print OUT "complete";
+		}
+		else {
+		    print OUT "lack_stop";
+		}
+	    }
+	    else {
+		if ($_ =~ m/\*/) {
+		    print OUT "lack_start";
+		}
+		else {
+		    print OUT "lack_both";
+		}
+	    }
+	    print OUT "\n$_\n";
+	}
+    }
+    close(IN);
+    close(OUT);
+    
+    print `mv $aa_out.cp $aa_out`;
 }
-close(IN);
+
+exit 0;
