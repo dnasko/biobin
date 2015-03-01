@@ -102,7 +102,7 @@ if ($first_line =~ m/^>/) {
 	chomp;
 	if ($_ =~ m/^>/ && $l > 0) {
 	    push(@size, length($seq));
-	    $gc += $seq =~ s/GCgc/GCGC/;
+	    $gc += $seq =~ tr/GCgc/GCGC/;
 	    my @Bases = split(//, $seq);
 	    foreach my $base (@Bases) {  $Bases{$base}++;  }
 	    $bases += length($seq);
@@ -136,7 +136,7 @@ close(IN);
 
 my $gc_content = $gc / $bases;
 my $mean = $bases / $seqs;
-my @sort_size = sort(@size);
+my @sort_size = sort {$a <=> $b} @size;
 if (scalar(@sort_size) % 2 == 0) {
     my $middle = scalar(@sort_size) / 2;
     $n50 = $sort_size[$middle] + $sort_size[$middle+1];
@@ -146,7 +146,7 @@ else {
     my $middle = (scalar(@sort_size) / 2) + 0.5;
     $n50 = $sort_size[$middle];
 }
-
+my $max = $sort_size[-1];
 print "
 
  Seqs  = $seqs
@@ -154,6 +154,7 @@ print "
  GC    = $gc_content
  mean  = $mean
  n50   = $n50
+ max   = $max
 
 ";
 
