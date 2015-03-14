@@ -1,0 +1,1 @@
+../perl/conversion/flaten_fasta.pl
