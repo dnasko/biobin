@@ -1,0 +1,1 @@
+../perl/conversion/fastq2fasta.pl

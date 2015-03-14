@@ -1,0 +1,1 @@
+../perl/phylip/strip_fasta_ids.pl

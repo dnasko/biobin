@@ -1,0 +1,1 @@
+../perl/alignment/rna_drawing.pl
