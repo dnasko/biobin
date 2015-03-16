@@ -18,10 +18,10 @@ int main(int argc, char *argv[])
       while (myfile.good())
   	{
   	  getline(myfile,line);
-	  if (regex_search(line, reg1))
-	    {
+	  //	  if (regex_search(line, reg1))
+	  //{
 	      cout << line << endl;
-	    }	
+	      //}	
 	}
       myfile.close();
     }

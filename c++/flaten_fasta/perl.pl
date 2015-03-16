@@ -6,9 +6,9 @@ my $infile = $ARGV[0];
 open(IN,"<$infile") || die "\n Cannot open the file: $infile\n";
 while(<IN>) {
     chomp;
-    if ($_ =~ m/^>/) {
+#    if ($_ =~ m/^>/) {
 	print $_ . "\n";
-    }
+#    }
 }
 close(IN);
 

@@ -91,7 +91,7 @@ GetOptions (
 pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
 pod2usage( -msg  => "\n\n ERROR!  Required argument --infile not found.\n\n", -exitval => 2, -verbose => 1)  if (! $infile );
-unless ($infile =~ m/\.gff$/) { die "\n ERROR: The input file should be in GFF format, and thus shoudl have a .gff extension.\n\n" }
+unless ($infile =~ m/\.gff/) { die "\n ERROR: The input file should be in GFF format, and thus shoudl have a .gff extension.\n\n" }
 
 my $aa_out = $infile;
 my $nt_out = $infile;
