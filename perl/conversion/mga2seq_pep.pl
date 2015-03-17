@@ -54,6 +54,7 @@ use lib $FindBin::Bin . "/../perl/lib";
 use TIGR::FASTAiterator;
 use TIGR::Foundation;
 use TIGR::FASTArecord;
+use BeginPerlBioinfo;
 use Getopt::Long qw(:config no_ignore_case no_auto_abbrev pass_through);
 use Pod::Usage;
 
@@ -98,7 +99,8 @@ open(NOPREDICT, ">".$options{outdir}."/".$options{prefix}.".no_prediction.list")
 open(SEQ, ">".$options{outdir}."/".$options{prefix}.".seq") or die("Could not open file $options{outdir}/$options{prefix}.seq");
 open(PROT, ">".$options{outdir}."/".$options{prefix}.".pep") or die("Could not open file $options{outdir}/$options{prefix}.pep");
 
-my $file = `egrep "$options{prefix}\\." $options{mga}`;   # modified 4/4/11 SWP
+# my $file = `egrep "$options{prefix}\\." $options{mga}`;   # modified 4/4/11 SWP
+my $file = $options{mga};
 
 unless (length($file)){
     die("No metagene output file for $options{prefix}");
@@ -196,9 +198,9 @@ while ($fr->hasNext){
     my $rec = $fr->next();
 
     # eliminate empty line error.
-    #if (defined $rec){
-	my $id = $rec->getIdentifier();
-	my $body = $rec->getData();
+    # if (defined $rec){
+    my $id = $rec->getIdentifier();
+    my $body = $rec->getData();
 
 	my $z = 1;
 	if (!defined $h_prot{$id}){
