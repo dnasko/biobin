@@ -77,6 +77,7 @@ use Getopt::Long;
 use File::Basename;
 use Pod::Usage;
 use Scalar::Util qw(looks_like_number);
+use threads;
 
 #ARGUMENTS WITH NO DEFAULT
 my($infile,$db,$outdir,$help,$manual);
@@ -129,12 +130,8 @@ while(<IN>) {
 }
 close(IN);
 
-if ($db =~ m/\.gz$/) { ## if a gzip compressed infile
-    open(IN,"gunzip -c $db |") || die "\n\n Cannot open the input file: $db\n\n";
-}
-else { ## If not gzip compressed
-    open(IN,"<$db") || die "\n\n Cannot open the input file: $db\n\n";
-}
+
+open(IN,"<$db") || die "\n\n Cannot open the input file: $db\n\n";
 while(<IN>) {
     chomp;
     my @Fields = split(/\t/, $_);
