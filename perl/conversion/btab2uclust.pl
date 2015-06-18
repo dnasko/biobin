@@ -1,5 +1,8 @@
 #!/usr/bin/perl -w
 use strict;
+if ( -d '/home/wommacklab/library/' ) {
+    use lib '/home/wommacklab/library/';
+}
 use Statistics::R;
 
 my $infile = $ARGV[0];
