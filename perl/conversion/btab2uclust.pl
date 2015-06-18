@@ -3,6 +3,9 @@ use strict;
 use Statistics::R;
 
 my $infile = $ARGV[0];
+
+unless (scalar(@ARGV) == 1) { die "\n Usage: btab2uclust.pl /Path/to/input.btab > output.uc\n\n\n"; }
+
 my %cluster;
 my %id;
 my $c=1;
