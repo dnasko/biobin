@@ -1,0 +1,5 @@
+-mutation_dist poly4 3e-3 3.3e-8
+-read_dist 150
+-mate_orientation FR
+-insert_dist 300
+-mutation_ratio 100 1

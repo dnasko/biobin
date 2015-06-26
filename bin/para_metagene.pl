@@ -1,1 +1,1 @@
-../perl/parallel_blasts/para_metagene.pl
+../perl/parallel/para_metagene.pl

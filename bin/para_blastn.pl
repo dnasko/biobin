@@ -1,1 +1,1 @@
-../perl/parallel_blasts/para_blastn.pl
+../perl/parallel/para_blastn.pl

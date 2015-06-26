@@ -1,1 +1,1 @@
-../perl/parallel_blasts/para_blast_bin/splitFASTA.pl
+../perl/parallel/para_blast_bin/splitFASTA.pl
