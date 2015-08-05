@@ -1,6 +1,21 @@
-#include <iostream>
-
 using namespace std;
+
+int NumSeqs(string file)
+{
+  string line;
+  int seqs = 0;
+  ifstream myfile (file);
+  if (myfile.is_open())
+    {
+      while ( getline (myfile,line) )
+	{
+	  if ( line[0] == '>' ) {seqs++;}
+	}
+      myfile.close();
+    }
+  else cout << "Unable to open file"; 
+  return seqs;
+}
 
 void Help(double version)
 {
