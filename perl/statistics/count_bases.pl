@@ -10,12 +10,13 @@ base_counter.pl -- counts the number of bases in a FASTA or FASTQ file
 
 =head1 SYNOPSIS
 
- base_counter.pl -in /Path/to/infile.fasta/q
+ base_counter.pl --in /Path/to/infile.fasta/q [--extended]
                      [--help] [--manual]
 
 =head1 DESCRIPTION
 
  Counts the number of bases in a FASTA or FASTQ file. Prints results to STDOUT
+ If you want a per-base type count, jsut includ ethe -e flag.
  
 =head1 OPTIONS
 
@@ -24,6 +25,10 @@ base_counter.pl -- counts the number of bases in a FASTA or FASTQ file
 =item B<-i, --in>=FILENAME
 
 Input file in FASTA or FASTQ format. (Required) 
+
+=item B<-e, --extended>
+
+Also print out the per-base counts. (Optional)
 
 =item B<-h, --help>
 
@@ -69,11 +74,12 @@ use File::Basename;
 use Pod::Usage;
 
 #ARGUMENTS WITH NO DEFAULT
-my($infile,$help,$manual);
+my($infile,$extended,$help,$manual);
 
 GetOptions (	
 				"i|in=s"	=>	\$infile,
-				"h|help"	=>	\$help,
+				"e|extended"    =>      \$extended,
+                                "h|help"	=>	\$help,
 				"m|manual"	=>	\$manual);
 
 # VALIDATE ARGS
@@ -126,9 +132,13 @@ else {
 }
 close(IN);
 
-foreach my $base (sort keys %Bases) {
-    my $percent = $Bases{$base} / $bases;
-    print "$base\t$Bases{$base}\t$percent\n";
+print $bases . "\n";
+
+if ($extended) {
+    foreach my $base (sort keys %Bases) {
+	my $percent = $Bases{$base} / $bases;
+	print "$base\t$Bases{$base}\t$percent\n";
+    }
 }
 
 exit 0;

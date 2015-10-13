@@ -4,6 +4,10 @@ use strict;
 my $infile = $ARGV[0];
 my ($bases,$gcs) = (0,0);
 
+unless (scalar(@ARGV) == 1) {
+    die " Usage: ./script.pl infile.fasta\n\n";
+}
+
 open(IN,"<$infile") || die "\n Cannot open the file: $infile\n";
 while(<IN>) {
     chomp;
