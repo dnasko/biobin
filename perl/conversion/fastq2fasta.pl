@@ -96,7 +96,7 @@ if ($infile =~ m/\.gz$/) { ## if a gzip compressed infile if ($infile =~ m/\.gz$
 else {
     open(IN,"<$infile") || die "\n\n Cannot open the input file: $infile\n\n";
 }
-
+open(OUT,">$outfile") || die "\n Cannot open the output file: $outfile\n";
 my $line_count = 0;
 
 if ($outfile eq "") {
