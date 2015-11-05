@@ -1,1 +1,0 @@
-../perl/alignment/string_alignment.pl

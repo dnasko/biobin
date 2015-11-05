@@ -1,1 +1,0 @@
-../perl/alignment/smith_waterman_nucl.pl

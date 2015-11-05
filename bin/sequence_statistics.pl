@@ -1,1 +1,0 @@
-../perl/statistics/sequence_statistics.pl

@@ -1,1 +1,0 @@
-../perl/conversion/strip_metagene_coords.pl

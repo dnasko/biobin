@@ -1,1 +1,0 @@
-../perl/pcr_product_analysis/adapter_searching/sequence_positions.pl
