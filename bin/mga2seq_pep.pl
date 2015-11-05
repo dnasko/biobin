@@ -1,0 +1,1 @@
+../conversion/mga2seq_pep.pl

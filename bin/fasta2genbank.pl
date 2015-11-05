@@ -1,0 +1,1 @@
+../conversion/fasta2genbank.pl

@@ -1,0 +1,1 @@
+../alignment/rna_drawing.pl

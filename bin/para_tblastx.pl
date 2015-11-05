@@ -1,0 +1,1 @@
+../alignment/para_tblastx.pl
