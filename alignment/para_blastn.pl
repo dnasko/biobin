@@ -43,7 +43,7 @@ Output format. (Default = 6)
 
 Number of CPUs to use. (Default = 1)
 
-=item B<-m, --max_target_seqs>=INT
+=item B<-x, --max_target_seqs>=INT
 
 Maximum number of hits to reprt for each query. (Defualt=500)
 
@@ -109,7 +109,7 @@ GetOptions (
                                 "e|evalue=s"    =>      \$evalue,
                                 "f|outfmt=s"    =>      \$outfmt,
                                 "t|threads=i"   =>      \$threads,
-             			"m|max_target_seqs=i" =>\$max_target_seqs,
+             			"x|max_target_seqs=i" =>\$max_target_seqs,
                                 "h|help"	=>	\$help,
 				"m|manual"	=>	\$manual);
 
@@ -148,7 +148,7 @@ else {
     print `perl $script_working_dir/para_blast_bin/splitFASTA.pl $query $tmp_file split $seqs_per_file`;
     print `mkdir -p $tmp_file/btab_splits`;
     for (my $i=1; $i<=$threads; $i++) {
-	my $blast_exe = "$program -query $tmp_file/split-$i.fsa -db $db -out $tmp_file/btab_splits/split.$i.btab -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs $max_target_seqs -word_size 5";
+	my $blast_exe = "$program -query $tmp_file/split-$i.fsa -db $db -out $tmp_file/btab_splits/split.$i.btab -outfmt $outfmt -evalue $evalue -num_threads 1 -max_target_seqs $max_target_seqs -word_size 7";
 	push (@THREADS, threads->create('task',"$blast_exe"));
     }
     foreach my $thread (@THREADS) {
