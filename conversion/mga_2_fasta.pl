@@ -142,13 +142,12 @@ while(<IN>) {
 	my @a = split(/\t/, $_);
 	my $gid = get_gid($a[0]);
 	if (exists $Fasta{$h}) {
-	    my $nt_orf_seq = get_nt_orf($Fasta{$h}, $a[1], $a[2]);
-	    if ($a[3] eq "-") { my $tmp = $a[1]; $a[1] = $a[2]; $a[2] = $tmp; $nt_orf_seq = revcomp($nt_orf_seq);}
+	    my $nt_orf_seq = get_nt_orf($Fasta{$h}, $a[1], $a[2], $a[3], $a[4]);
 	    print NUC ">" . $h . "_" . $a[1] . "_" . $a[2] . "_" . $gid . " size=" . orf_len($nt_orf_seq) . " gc=" . gc($nt_orf_seq) . " start=$a[1]" . " stop=$a[2]" . " strand=$a[3]" . " frame=$a[4]" . " model=" . $Model{$a[7]} . " score=$a[6]" . " type=" . get_type($a[5]) . " caller=MetaGENE" . "\n";
 	    print NUC $nt_orf_seq . "\n";
 
 	    print PEP ">" . $h . "_" . $a[1] . "_" . $a[2] . "_" . $gid . " size=" . orf_len($nt_orf_seq) . " gc=" . gc($nt_orf_seq) . " start=$a[1]" . " stop=$a[2]" . " strand=$a[3]" . " frame=$a[4]" . " model=" . $Model{$a[7]} . " score=$a[6]" . " type=" . get_type($a[5]) . " caller=MetaGENE" . "\n";
-	    print PEP translate($nt_orf_seq,$a[4]) . "\n";
+	    print PEP translate($nt_orf_seq) . "\n";
 	}
 	else {die "\n Error! Cannot find the sequence: $h\n";}
     }
@@ -167,9 +166,8 @@ close(NUC);
 sub translate
 {
     my $str = $_[0];
-    my $frame = $_[1];
     my $peptide = "";
-    for (my $i=$frame; $i<length($str)-2; $i+=3) {
+    for (my $i=0; $i<length($str)-2; $i+=3) {
 	my $mer = substr $str, $i, 3;
 	if (exists $Codon{$mer}) { $peptide = $peptide . $Codon{$mer}; }
 	else { $peptide = $peptide . 'X'; }
@@ -222,9 +220,13 @@ sub get_nt_orf
     my $seq = $_[0];
     my $start = $_[1];
     my $stop = $_[2];
+    my $sense = $_[3];
+    my $frame = $_[4];
     my $length = $stop - $start + 1;
     $start--;
     my $orf = substr $seq, $start, $length;
+    if ($sense eq "-") { $orf = revcomp($orf); }
+    $orf = substr $orf, $frame;
     return $orf;
 }
 sub get_gid
