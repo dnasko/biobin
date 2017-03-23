@@ -200,8 +200,8 @@ sub get_type
 {
     my $str = $_[0];
     if ($str eq "11") { return "complete";}
-    elsif ($str eq "10") { return "lackStop";}
-    elsif ($str eq "01") { return "lackStart";}
+    elsif ($str eq "10") { return "lack_stop";}
+    elsif ($str eq "01") { return "lack_start";}
     elsif ($str eq "00") { return "incomplete";}
 }
 sub gc
