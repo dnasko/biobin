@@ -1,0 +1,1 @@
+../conversion/mga2fasta.pl

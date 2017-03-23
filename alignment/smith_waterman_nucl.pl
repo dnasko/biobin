@@ -104,8 +104,8 @@ my $MATCH     =  1; # +1 for letters that match
 my $MISMATCH  = -1; # -1 for letters that mismatch
 my $GAP       = -1; # -1 for any gap
 
-my $raw_out = $outroot . ".raw";
-my $btab_out = $outroot . ".btab";
+my $raw_out = $outroot . "alignment.raw";
+my $btab_out = $outroot . "alignment.btab";
 open(RAW,">$raw_out") || die "\nError: Cannot write to raw output file: $raw_out\n";
 open(BTAB,">$btab_out") || die "\nError: Cannot write to btab output file: $btab_out\n";
 foreach my $q (@Query) {

@@ -1,22 +1,23 @@
 #!/usr/bin/perl -w
 
-# MANUAL FOR mga_2_fasta.pl
+# MANUAL FOR mga2fasta.pl
 
 =pod
 
 =head1 NAME
 
-mga_2_fasta.pl -- converts mga files to fasta files
+mga2fasta.pl -- converts a metagene mga file to a pep and nuc fasta file
 
 =head1 SYNOPSIS
 
- mga_2_fasta.pl --fasta=/Path/to/infile.fasta --mga=/Path/to/infile.mga --prefix=PREFIX --outdir=/Path/to/output_dir
+ mga2fasta.pl --fasta=/Path/to/infile.fasta --mga=/Path/to/infile.mga --prefix=PREFIX --outdir=/Path/to/output_dir
                      [--help] [--manual]
 
 =head1 DESCRIPTION
 
  This is an updated script to the old mga2seq_pep.pl. Should be faster
- and easier to install / run.
+ and easier to install / run. Converts MetaGene files to peptide and
+ nucleotide orf files.
  
 =head1 OPTIONS
 
