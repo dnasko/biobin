@@ -143,7 +143,8 @@ while(<IN>) {
 	my $gid = get_gid($a[0]);
 	if (exists $Fasta{$h}) {
 	    my $nt_orf_seq = get_nt_orf($Fasta{$h}, $a[1], $a[2], $a[3], $a[4]);
-	    print NUC ">" . $h . "_" . $a[1] . "_" . $a[2] . "_" . $gid . " size=" . orf_len($nt_orf_seq) . " gc=" . gc($nt_orf_seq) . " start=$a[1]" . " stop=$a[2]" . " strand=$a[3]" . " frame=$a[4]" . " model=" . $Model{$a[7]} . " score=$a[6]" . " type=" . get_type($a[5]) . " caller=MetaGENE" . "\n";
+	    if ($a[3] eq "-") { my $tmp=$a[1]; $a[1]=$a[2];$a[2]=$tmp; }
+	    print NUC ">" . $h . "_" . $a[1] . "_" . $a[2] . "_" . $gid . " size=" . length($nt_orf_seq) . " gc=" . gc($nt_orf_seq) . " start=$a[1]" . " stop=$a[2]" . " strand=$a[3]" . " frame=$a[4]" . " model=" . $Model{$a[7]} . " score=$a[6]" . " type=" . get_type($a[5]) . " caller=MetaGENE" . "\n";
 	    print NUC $nt_orf_seq . "\n";
 
 	    print PEP ">" . $h . "_" . $a[1] . "_" . $a[2] . "_" . $gid . " size=" . orf_len($nt_orf_seq) . " gc=" . gc($nt_orf_seq) . " start=$a[1]" . " stop=$a[2]" . " strand=$a[3]" . " frame=$a[4]" . " model=" . $Model{$a[7]} . " score=$a[6]" . " type=" . get_type($a[5]) . " caller=MetaGENE" . "\n";
