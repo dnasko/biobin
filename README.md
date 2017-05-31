@@ -9,4 +9,4 @@ All production ready scripts are linked in the `bin` directory, by
 adding the "/Path/to/biobin/bin" to your PATH you should be
 all set.
 
-DJN 07Nov2016
+DJN 31May2017
