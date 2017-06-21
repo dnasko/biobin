@@ -109,6 +109,7 @@ my %Model = (
     'b' => 'bacteria',
     's' => 'self');
 my %Codon;
+my $nseqs=0;
 LoadCodonTable();
 open(IN,"<$fasta") || die "\n\n Cannot open the input file: $fasta\n\n";
 while(<IN>) {
@@ -149,7 +150,10 @@ while(<IN>) {
 	    print NUC $nt_orf_seq . "\n";
 
 	    print PEP ">" . $h . "_" . $a[1] . "_" . $a[2] . "_" . $gid . " size=" . orf_len($nt_orf_seq) . " gc=" . gc($nt_orf_seq) . " start=$a[1]" . " stop=$a[2]" . " strand=$a[3]" . " frame=$a[4]" . " model=" . $Model{$a[7]} . " score=$a[6]" . " type=" . get_type($a[5]) . " caller=MetaGENE" . "\n";
-	    print PEP translate($nt_orf_seq) . "\n";
+	    my $translated_seq = translate($nt_orf_seq);
+	    if ($a[5] =~ m/^1/) {$translated_seq =~ s/^./M/;} ## This seems weird, but isnt. MetaGene allows for alternative start codons when predicting ORFs, funny thing about alternative start codons is, even if they are supposed to encode some other peptide the tRNA will always put a Met there.
+	    print PEP $translated_seq . "\n";
+	    $nseqs++;
 	}
 	else {die "\n Error! Cannot find the sequence: $h\n";}
     }
@@ -164,6 +168,8 @@ while(<IN>) {
 close(IN);
 close(PEP);
 close(NUC);
+
+if ($nseqs == 0) { die "\n Error: There were no ORFs predicted from your input files\n FASTA file: $fasta\n MGA file: $mga\n\n"; }
 
 sub translate
 {
