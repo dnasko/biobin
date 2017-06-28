@@ -99,6 +99,8 @@ pod2usage( -msg  => "\n\n ERROR!  Required argument -infile not found.\n\n", -ex
 pod2usage( -msg  => "\n\n ERROR!  Required argument -out not found.\n\n", -exitval => 2, -verbose => 1)     if (! $out);
 pod2usage( -msg  => "\n\n ERROR!  Required argument -splits not found.\n\n", -exitval => 2, -verbose => 1)  if (! $splits );
 
+$splits=int($splits);
+if ($splits < 1) { die "\n The number of splits must be positive, you select: $splits\n"; }
 my $line_count = 0;
 my ($header,$seq);
 
@@ -140,7 +142,7 @@ foreach my $i (sort {$b<=>$a} keys %Size) {
 	if ($num == 1) {
 	    if ($up == 1) {
 		$Size{$i}{$j} = $num;
-		$num++;
+		unless ($splits==1) { $num++; }
 	    }
 	    else {
 		$up = 1;
