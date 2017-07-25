@@ -100,7 +100,7 @@ use String::Approx 'amatch';
 my ($fasta,$adapter,$outfile,$barcode,$trim,$help,$manual);
 
 ## ARGS WITH DEFAULTS
-my $identity = 1.0;
+my $identity = "1.0";
 my $window   = 30;
 my $outdir   = "./demultiplex_out";
 
@@ -160,6 +160,7 @@ while(<IN>) {
     unless (scalar(@col) == 2) { die " Error: Make sure your adapter lookup file is delimmited by tabs, not spaces\n\n ";}
     my $name = $col[0];
     my $seq = uc($col[1]);
+    # print $name . " <-> " . $seq . "\n";
     my $valid_bases = $seq =~ tr/ATGC/ATGC/;
     if ($valid_bases == length($seq)) { ## if the primer / adapter has no ambiguous bases
 	my @tmp = ($name, $seq);
@@ -188,7 +189,7 @@ while(<IN>) {
 			if ($local_count == scalar(@{$AmbigBases{$Seq[$i]}})) { $local_count = 0; } 
 		    }
 		}
-		else {  die "\n Error: Primer/Adapter contains invalid ambgious base: $Seq[$i]\n Only A,C,G,T,W,S,M,K,R,Y,B,D,H,V, and N are acceptable.\n\n"; } 
+		else {  die "\n Error: Primer/Adapter contains invalid ambgious base:\n$Seq[$i] $i \n\n Only A,C,G,T,W,S,M,K,R,Y,B,D,H,V, and N are acceptable.\n\n"; } 
 	    }
 	    else {
 		for (my $j=1;$j <= $combos; $j++) {
