@@ -1,0 +1,1 @@
+../utilities/validate_fasta.pl
