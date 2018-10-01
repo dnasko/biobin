@@ -15,6 +15,10 @@ para_blastp.pl -- embarasingly parallel BLASTp
 
 =head1 DESCRIPTION
 
+Embarssingly parallel BLASTp. NOTE the default max_target_seqs is set to 50. Users should update
+this value to >= the number of sequences in the subject database if they want to guarentee
+they get the best hit.
+
 =head1 OPTIONS
 
 =over 3
