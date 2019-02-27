@@ -131,13 +131,14 @@ my %is_reverse;
 ## Logging
 print "
  demultiplex.pl version $version
- infile: $fasta
- adapter lookup: $adapter
- writing outputs to: $outdir
+ infile:      $fasta
+ adapters:    $adapter
+ outputs to:  $outdir
+ window:      $window
  matching at: $identity
- trim: ";
+ trim:        ";
 if ($trim) { $trim = 1; print "YES\n\n"}
-else {$trim = 0; print "No.\n\n"}
+else {$trim = 0; print "no\n\n"}
 
 ## Read FASTA file into a hash
 my %Fasta = read_fasta_hash($fasta);
@@ -442,12 +443,12 @@ sub trim_adapter
     my $flag = $_[2];
     my $sequence = $Fasta{$header};
     my $not_at_beginning = 0; # set as false
+    my $trimmed_sequence = "";
     if ($flag == 3 || $flag == 4) {	$sequence = revcomp($sequence);    }
     if ($flag == 1 || $flag == 3) { ## If at the beginning of the seq
-	my $splice_position = find_splice($adapter_seq,$sequence,0,-1);
-	my $trimmed_sequence;
-	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,-1); }
-	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,-1); }
+	my $splice_position = find_splice($adapter_seq,$sequence,0,-1,$header,0);
+	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,-1,$header,1); }
+	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,-1,$header,2); }
 	if ($splice_position < 0) { $not_at_beginning = 1; }
 	else {
 	    $splice_position += length($adapter_seq) - 2;
@@ -456,12 +457,12 @@ sub trim_adapter
 	}
 	## Now try to trim the RC adapter on the 3' end.
 	my $rev_adapter_seq = revcomp($adapter_seq);
-	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,1);
-	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,1,1); }
-	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,2,1); }
+	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,1,$header,3);
+	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,1,1,$header,4); }
+	if ($splice_position > 0) {    $splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,2,1,$header,5); }
 	if ($splice_position > 0) {
 	    if ($not_at_beginning == 1) {
-		die " \n Error! Unable to trim this sequence: $header\n";
+		die " \n Error! Unable to trim this sequence (case 1): $header\n";
 	    }
 	    else {
 		return($trimmed_sequence);
@@ -474,10 +475,9 @@ sub trim_adapter
 	}
     }
     else {
-	my $splice_position = find_splice($adapter_seq,$sequence,0,1);
-	my $trimmed_sequence;
-	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,1); }
-	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,1); }
+	my $splice_position = find_splice($adapter_seq,$sequence,0,1,$header,6);
+	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,1,1,$header,7); }
+	if ($splice_position > 0) {    $splice_position = find_splice($adapter_seq,$sequence,2,1,$header,8); }
 	if ($splice_position > 0) {    $not_at_beginning = 1; }
 	else {
 	    $trimmed_sequence = substr $sequence, 0, length($sequence)+$splice_position;
@@ -485,12 +485,12 @@ sub trim_adapter
 	}
 	## Now try to trim RC adapter on 5' end.
 	my $rev_adapter_seq = revcomp($adapter_seq);
-	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,-1);
-	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$trimmed_sequence,1,-1); }
-        if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$trimmed_sequence,2,-1); }
+	$splice_position = find_splice($rev_adapter_seq,$trimmed_sequence,0,-1,$header,9);
+	if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$trimmed_sequence,1,-1,$header,10); }
+        if ($splice_position < 0) {    $splice_position = find_splice($adapter_seq,$trimmed_sequence,2,-1,$header,11); }
 	if ($splice_position < 0) {
 	    if ($not_at_beginning == 1) {
-		die " \n Error! Unable to trim this sequence: $header\n";
+		die " \n Error! Unable to trim this sequence (case 2): $header\n";
 	    }
 	    else {
 		return($trimmed_sequence);
@@ -514,6 +514,9 @@ sub find_splice
     my $sequence = $_[1];
     my $sliding_extension = $_[2];
     my $splice_position = $_[3];
+    my $header = $_[4];
+    my $case = $_[5];
+    if (length($sequence) == 0) { die " Error: Cant find a splice in sequence of size zero for header: $header\n Case: $case\n\n"; }
     if ($splice_position < 0) {
 	for (my $i=0;$i<=$window-length($adapter_seq)+$sliding_extension;$i++) {
 	    my $sliding_window = substr $sequence, $i, length($adapter_seq)+$sliding_extension;
