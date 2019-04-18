@@ -117,6 +117,7 @@ while(<IN>) {
     if ($_ =~ m/^>/) {
 	unless ($l == 0) {
 	    $s = uc($s);
+	    if (exists $Fasta{$h}) { die "\n Error! This input FASTA file has two identical headers: $h\n\n"; }
 	    $Fasta{$h} = $s;
 	    $s = "";
 	}
