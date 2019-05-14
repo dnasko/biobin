@@ -151,8 +151,12 @@ if ($first_line =~ m/^>/) {
 	    $current_sequence = $current_sequence . $_;
 	}
     }
-    close(OUT);
     close(IN);
+    my $length = length($current_sequence);
+    if ($length >= $minlen && $length <= $maxlen) {
+	print OUT "$current_header\n$current_sequence\n";
+    }
+    close(OUT);
     my $end_time = time();
     my $running_time = $end_time - $start_time;
     print "\nInput File:$input\nFormat: FASTA\nMinimum Length: $minlen\nMaximum Length: $maxlen\nMinimum Mean Quality: $minqual\nMaximum Mean Quality: $maxqual\nRunning Time: $running_time seconds\nOutput written to: $outfile\n\n";
