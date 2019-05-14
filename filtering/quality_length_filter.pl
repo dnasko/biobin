@@ -50,7 +50,7 @@ Minimum mean quality of sequence you would like to keep. (Default=0)
 
 Maximum mean quality of sequence you would like to keep. (Default= +infinity)
 
-=item B<-i, --outfile>=FILENAME
+=item B<-o, --outfile>=FILENAME
 
 Output file in FASTA or FASTQ format. (Required)
 
@@ -96,9 +96,6 @@ use strict;
 use Getopt::Long;
 use File::Basename;
 use Pod::Usage;
-use Bio::Seq;
-use Bio::SeqIO;
-use Bio::SeqIO::qual;
 
 #ARGUMENTS WITH NO DEFAULT
 my($input,$outfile,$help,$manual);
@@ -132,21 +129,30 @@ my $lc = 0;                 ## Global line counting variable needed for reading 
 my $size_flag = 0;          ## binary flag for size being correct
 my $quality_flag = 0;       ## binary flag for the quality being correct
 my $sum = 0;                ## little sum variable to help caluclate the average quality score
-my ($current_header,$current_sequence,$current_comment,$current_quality);
+my ($current_header,$current_sequence,$current_comment,$current_quality) = ("","","","");
 
-if ($first_line =~ m/^>/) {     ## if the input was a FASTA file
+## If the input was a FASTA file
+if ($first_line =~ m/^>/) {
     open(OUT,">$outfile") || die "\n\nCannot open the output file $outfile\n\n";
-    my ($seqio_obj,$seq_obj);
-    $seqio_obj = Bio::SeqIO->new(-file => "$input", -format => "fasta" ) or die $!;
-    while ($seq_obj = $seqio_obj->next_seq){
-        my $length = length($seq_obj->seq);
-        if ($length >= $minlen && $length <= $maxlen) {
-            my $header = $seq_obj->display_id;
-            my $sequence = $seq_obj->seq;
-            print OUT ">$header\n$sequence\n";
-        }
+    open(IN,"<$input") || die "\n Error: Cannot open the FASTA file: $input\n";
+    while(<IN>) {
+	chomp;
+	if ($_ =~ m/^>/) {
+	    unless (length($current_header) == 0) {
+		my $length = length($current_sequence);
+		if ($length >= $minlen && $length <= $maxlen) {
+		    print OUT "$current_header\n$current_sequence\n";
+		}
+	    }
+	    $current_header = $_;
+	    $current_sequence = "";
+	}
+	else {
+	    $current_sequence = $current_sequence . $_;
+	}
     }
     close(OUT);
+    close(IN);
     my $end_time = time();
     my $running_time = $end_time - $start_time;
     print "\nInput File:$input\nFormat: FASTA\nMinimum Length: $minlen\nMaximum Length: $maxlen\nMinimum Mean Quality: $minqual\nMaximum Mean Quality: $maxqual\nRunning Time: $running_time seconds\nOutput written to: $outfile\n\n";
