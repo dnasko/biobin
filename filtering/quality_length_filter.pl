@@ -136,6 +136,7 @@ if ($first_line =~ m/^>/) {
     open(OUT,">$outfile") || die "\n\nCannot open the output file $outfile\n\n";
     open(IN,"<$input") || die "\n Error: Cannot open the FASTA file: $input\n";
     while(<IN>) {
+	s/\r[\n]*/\n/gm;
 	chomp;
 	if ($_ =~ m/^>/) {
 	    unless (length($current_header) == 0) {
