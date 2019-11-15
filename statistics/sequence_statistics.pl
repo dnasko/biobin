@@ -10,7 +10,7 @@ sequence_statistics.pl -- return stats for a FASTA or FASTQ file
 
 =head1 SYNOPSIS
 
- sequence_statistics.pl --in=/Path/to/infile.fasta/q
+ sequence_statistics.pl --in=/Path/to/infile.fast(a|q)
                      [--help] [--manual]
 
 =head1 DESCRIPTION
@@ -79,7 +79,7 @@ GetOptions (
 # VALIDATE ARGS
 pod2usage(-verbose => 2)  if ($manual);
 pod2usage( {-exitval => 0, -verbose => 2, -output => \*STDERR} )  if ($help);
-pod2usage( -msg  => "\n\n ERROR!  Required argument -infile not found.\n\n", -exitval => 2, -verbose => 1)  if (! $infile );
+pod2usage( -msg  => "\n\n ERROR!  Required argument --in not found.\n\n", -exitval => 2, -verbose => 1)  if (! $infile );
 
 my $l = 0;
 my ($seqs,$bases,$gc,$n50,$kb10,$kb10base) = (0,0,0,0,0,0);
@@ -90,12 +90,10 @@ my %Bases;
 if ($infile =~ m/\.gz$/) { ## if a gzip compressed infile
     open(IN,"gunzip -c $infile |") || die "\n\n Cannot open the input file: $infile\n\n";
     $first_line = <IN>;
-    $seqs++;
 }
 else { ## If not gzip comgressed
     open(IN,"<$infile") || die "\n\n Cannot open the input file: $infile\n\n";
     $first_line = <IN>;
-    $seqs++;
 }
 chomp($first_line);
 if ($first_line =~ m/^>/) {
@@ -103,43 +101,26 @@ if ($first_line =~ m/^>/) {
     while(<IN>) {
 	chomp;
 	if ($_ =~ m/^>/) {
-	    push(@size, length($seq));
-	    $gc += $seq =~ tr/GCgc/GCGC/;
-	    my @Bases = split(//, $seq);
-	    foreach my $base (@Bases) {  $Bases{$base}++;  }
-	    $bases += length($seq);
-	    $seqs++;
-	    if (length($seq) >= 10000) {
-		$kb10++;
-		$kb10base += length($seq);
-	    }
+	    sequence_statistics($seq);
 	    $seq = "";
 	}
 	else {
 	    $seq = $seq . $_;
 	}
     }
-    push(@size, length($seq));
-    $gc += $seq =~ tr/GCgc/GCGC/;
-    my @Bases = split(//, $seq);
-    foreach my $base (@Bases) {  $Bases{$base}++;  }
-    $bases += length($seq);
-    if (length($seq) >= 10000) {
-	$kb10++;
-	$kb10base += length($seq);
-    }
+    sequence_statistics($seq);
 }
 elsif ($first_line =~ m/^@/) {
-    # if ($l == 1) {
-    # 	my $seq = $_;
-    # 	my @Bases =split(//, $seq);
-    # 	foreach my $base (@Bases) {
-    # 	    $Bases{$base}++;
-    # 	}
-    # 	$bases += length($_);
-    # }
-    # $l++;
-    # if ($l == 4) { $l = 0; }
+    while(<IN>) {
+	chomp;
+	if ($l == 0) {
+	    ## Remember the first line was stripped, so need to look for the 0th line
+	    my $seq = $_;
+	    sequence_statistics($seq);
+	    $l=-4;
+	}
+	$l++;
+    }
 }
 else {
     close(IN);
@@ -168,8 +149,10 @@ print "
  mean  = $mean
  n50   = $n50
  max   = $max
- >10KB = $kb10
-  base = $kb10base
+ -----------
+ >10KB 
+   Seqs = $kb10
+   Base = $kb10base
 
 ";
 
@@ -179,3 +162,18 @@ foreach my $base (sort keys %Bases) {
 }
 
 exit 0;
+
+sub sequence_statistics
+{
+    my $s = $_[0];
+    push(@size, length($s));
+    $gc += $s =~ tr/GCgc/GCGC/;
+    my @Bases = split(//, $s);
+    foreach my $base (@Bases) {  $Bases{$base}++;  }
+    $bases += length($s);
+    $seqs++;
+    if (length($s) >= 10000) {
+	$kb10++;
+	$kb10base += length($s);
+    }
+}
