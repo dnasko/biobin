@@ -58,11 +58,11 @@ Center for Bioinformatics and Computational Biology, University of Delaware.
 
 =head1 REPORTING BUGS
 
-Report bugs to dnasko@udel.edu
+Report bugs to dan.nasko@gmail.com
 
 =head1 COPYRIGHT
 
-Copyright 2015 Daniel Nasko.  
+Copyright 2020 Daniel Nasko.  
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.  
 This is free software: you are free to change and redistribute it.  
 There is NO WARRANTY, to the extent permitted by law.  
@@ -77,7 +77,6 @@ use strict;
 use Getopt::Long;
 use File::Basename;
 use Pod::Usage;
-use Bio::SeqIO;
 
 #ARGUMENTS WITH NO DEFAULT
 my($fasta,$out,$samples,$help,$manual);
@@ -102,22 +101,27 @@ if ( $samples > $nseqs ) { die " The number of samples you want to take exceeds 
 my %Random = generate_random_hash($samples);
 my $count = 1;
 my $printing_count = 1;
+my $print_flag = 0;
 
-my $seq_in  = Bio::SeqIO->new(
-    -format => 'fasta',
-    -file   => $fasta );
-open(OUT, ">$out") || die "\n Cannot write to: $out\n\n";
-while( my $seq = $seq_in->next_seq() ) {
-    if (exists $Random{$count}) {
-	for (my $i=1; $i <= $Random{$count}; $i++) {
-	    print OUT ">" . $printing_count . "_" . $seq->id . "\n";
-	    print OUT $seq->seq . "\n";
+open(IN,"<$fasta") || die "\n Cannot open the file: $fasta\n";
+open(OUT,">$out") || die "\n Cannot open the file: $out\n";
+while(<IN>) {
+    chomp;
+    if ($_ =~ m/^>/) {
+	$print_flag = 0;
+	if (exists $Random{$count}) {
+	    $print_flag = 1;
+	    print OUT $_ . "\n";
 	    $printing_count++;
 	}
+	$count++;
     }
-    $count++;
+    elsif ($print_flag == 1) {
+	print OUT $_ . "\n";
+    }
 }
 close(OUT);
+close(IN);
 
 sub generate_random_hash
 {
